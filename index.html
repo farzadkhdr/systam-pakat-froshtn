@@ -263,6 +263,18 @@
             margin: 20px 0;
         }
         
+        .purchase-history {
+            margin-top: 20px;
+        }
+        
+        .purchase-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
         @media (max-width: 768px) {
             .stats {
                 grid-template-columns: 1fr 1fr;
@@ -303,12 +315,32 @@
                     <p id="today-purchases">0 دینار</p>
                 </div>
                 <div class="stat-card">
-                    <h3>جیاوازی</h3>
+                    <h3>جیاوازی (ئەمڕۆ)</h3>
                     <p id="today-profit">0 دینار</p>
                 </div>
                 <div class="stat-card">
                     <h3>کۆی فرۆشتن (ئەم مانگە)</h3>
                     <p id="month-sales">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی کڕین (ئەم مانگە)</h3>
+                    <p id="month-purchases">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>جیاوازی (ئەم مانگە)</h3>
+                    <p id="month-profit">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی گشتی فرۆشتن</h3>
+                    <p id="total-sales">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی گشتی کڕین</h3>
+                    <p id="total-purchases">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>جیاوازی گشتی</h3>
+                    <p id="total-profit">0 دینار</p>
                 </div>
             </div>
             
@@ -392,6 +424,40 @@
             <h2>کڕینی پاکەت</h2>
             
             <div class="card">
+                <h3>کڕینی پاکەت</h3>
+                <button class="btn btn-primary" id="purchase-product-btn">کڕینەوە</button>
+                
+                <div id="purchase-form" class="hidden">
+                    <div class="form-group">
+                        <label>گەڕان بەدوای پاکەت:</label>
+                        <input type="text" class="search-box" id="purchase-search" placeholder="ناوی پاکەت...">
+                        <div id="purchase-suggestions" class="suggestions"></div>
+                    </div>
+                    
+                    <div id="purchase-product-details">
+                        <!-- وردەکاری پاکەت لێرە دەخرێنەوە -->
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>بڕی کڕدراو:</label>
+                        <input type="number" class="form-control" id="purchase-quantity" value="1" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>نرخی کڕین (بۆ هەر یەک):</label>
+                        <input type="number" class="form-control" id="purchase-unit-price">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>نرخی فرۆشتن (بۆ هەر یەک):</label>
+                        <input type="number" class="form-control" id="purchase-sale-price">
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="confirm-purchase">پشتڕاستکردنەوەی کڕین</button>
+                </div>
+            </div>
+            
+            <div class="card">
                 <h3>لیستی پاکەتەکان</h3>
                 <input type="text" class="search-box" id="purchase-product-search" placeholder="گەڕان بەدوای پاکەت...">
                 
@@ -441,6 +507,14 @@
                 </div>
                 
                 <button class="btn btn-primary" id="add-product">زیادکردنی پاکەت</button>
+            </div>
+
+            <div class="card">
+                <h3>مێژووی کڕین</h3>
+                <input type="text" class="search-box" id="purchase-history-search" placeholder="گەڕان لە مێژووی کڕین...">
+                <div id="purchase-history">
+                    <!-- مێژووی کڕین لێرە دەخرێنەوە -->
+                </div>
             </div>
         </section>
         
@@ -539,28 +613,44 @@
         
         // فەنکشنەکان بۆ نوێکردنەوەی بەشە جیاوازەکان
         function updateDashboard() {
-            // کۆی فرۆشتن و کڕینی ئەمڕۆ
             const today = new Date().toISOString().split('T')[0];
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+            
+            // ئامارەکانی ئەمڕۆ
             const todaySales = sales.filter(s => s.date === today)
                                    .reduce((sum, sale) => sum + sale.total, 0);
             const todayPurchases = purchases.filter(p => p.date === today)
                                            .reduce((sum, purchase) => sum + purchase.total, 0);
             
-            document.getElementById('today-sales').textContent = todaySales + ' دینار';
-            document.getElementById('today-purchases').textContent = todayPurchases + ' دینار';
-            document.getElementById('today-profit').textContent = (todaySales - todayPurchases) + ' دینار';
-            
-            // کۆی فرۆشتن و کڕینی ئەم مانگە
-            const currentMonth = new Date().getMonth() + 1;
-            const currentYear = new Date().getFullYear();
+            // ئامارەکانی ئەم مانگە
             const monthSales = sales.filter(s => {
                 const saleDate = new Date(s.date);
                 return saleDate.getMonth() + 1 === currentMonth && saleDate.getFullYear() === currentYear;
             }).reduce((sum, sale) => sum + sale.total, 0);
             
-            document.getElementById('month-sales').textContent = monthSales + ' دینار';
+            const monthPurchases = purchases.filter(p => {
+                const purchaseDate = new Date(p.date);
+                return purchaseDate.getMonth() + 1 === currentMonth && purchaseDate.getFullYear() === currentYear;
+            }).reduce((sum, purchase) => sum + purchase.total, 0);
             
-            // نوێکردنەوەی ڕاپۆرت
+            // کۆی گشتی
+            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
+            const totalPurchases = purchases.reduce((sum, purchase) => sum + purchase.total, 0);
+            
+            // نوێکردنەوەی نمایش
+            document.getElementById('today-sales').textContent = todaySales + ' دینار';
+            document.getElementById('today-purchases').textContent = todayPurchases + ' دینار';
+            document.getElementById('today-profit').textContent = (todaySales - todayPurchases) + ' دینار';
+            
+            document.getElementById('month-sales').textContent = monthSales + ' دینار';
+            document.getElementById('month-purchases').textContent = monthPurchases + ' دینار';
+            document.getElementById('month-profit').textContent = (monthSales - monthPurchases) + ' دینار';
+            
+            document.getElementById('total-sales').textContent = totalSales + ' دینار';
+            document.getElementById('total-purchases').textContent = totalPurchases + ' دینار';
+            document.getElementById('total-profit').textContent = (totalSales - totalPurchases) + ' دینار';
+            
             updateReport();
         }
         
@@ -572,6 +662,7 @@
         
         function updatePurchaseSection() {
             updatePurchaseProductList();
+            updatePurchaseHistory();
         }
         
         function updateInventorySection() {
@@ -989,8 +1080,131 @@
                 updateSalesHistory();
             }
         }
-        
+
         // فەنکشنەکانی کڕین
+        document.getElementById('purchase-product-btn').addEventListener('click', function() {
+            const purchaseForm = document.getElementById('purchase-form');
+            purchaseForm.classList.toggle('hidden');
+            setupPurchaseSuggestions();
+        });
+
+        function setupPurchaseSuggestions() {
+            const searchInput = document.getElementById('purchase-search');
+            const suggestionsContainer = document.getElementById('purchase-suggestions');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                suggestionsContainer.innerHTML = '';
+                
+                if (query.length < 2) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+                
+                const filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query)
+                );
+                
+                if (filteredProducts.length > 0) {
+                    suggestionsContainer.style.display = 'block';
+                    filteredProducts.forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.textContent = product.name;
+                        item.addEventListener('click', () => {
+                            searchInput.value = product.name;
+                            suggestionsContainer.style.display = 'none';
+                            showPurchaseProductDetails(product);
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+
+        function showPurchaseProductDetails(product) {
+            const detailsContainer = document.getElementById('purchase-product-details');
+            detailsContainer.innerHTML = `
+                <div class="card">
+                    <h4>${product.name}</h4>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="max-width: 100px;">` : ''}
+                    <p>نرخی کڕینی ئێستا: ${product.purchasePrice} دینار</p>
+                    <p>نرخی فرۆشتنی ئێستا: ${product.salePrice} دینار</p>
+                    <p>بڕی ماوە: ${product.quantity}</p>
+                </div>
+            `;
+            
+            document.getElementById('purchase-unit-price').value = product.purchasePrice;
+            document.getElementById('purchase-sale-price').value = product.salePrice;
+            document.getElementById('purchase-quantity').value = 1;
+        }
+
+        // پشتڕاستکردنەوەی کڕین
+        document.getElementById('confirm-purchase').addEventListener('click', function() {
+            const productName = document.getElementById('purchase-search').value;
+            const quantity = parseInt(document.getElementById('purchase-quantity').value);
+            const unitPrice = parseFloat(document.getElementById('purchase-unit-price').value);
+            const salePrice = parseFloat(document.getElementById('purchase-sale-price').value);
+            
+            if (!productName || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
+                alert('تکایە هەموو خانەکان پڕ بکەرەوە');
+                return;
+            }
+            
+            // دۆزینەوەی پاکەت
+            let product = products.find(p => p.name === productName);
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (product) {
+                // نوێکردنەوەی پاکەتی هەیە
+                product.quantity += quantity;
+                product.purchasePrice = unitPrice;
+                product.salePrice = salePrice;
+            } else {
+                // دروستکردنی پاکەتی نوێ
+                product = {
+                    id: Date.now(),
+                    name: productName,
+                    purchasePrice: unitPrice,
+                    salePrice: salePrice,
+                    quantity: quantity,
+                    saleType: 'unit'
+                };
+                products.push(product);
+            }
+            
+            // تۆمارکردنی کڕین
+            const purchase = {
+                id: Date.now(),
+                date: today,
+                productName: productName,
+                quantity: quantity,
+                unitPrice: unitPrice,
+                total: quantity * unitPrice
+            };
+            
+            purchases.push(purchase);
+            
+            // پاشەکەوتکردنی داتاکان
+            localStorage.setItem('products', JSON.stringify(products));
+            localStorage.setItem('purchases', JSON.stringify(purchases));
+            
+            // ڕێستکردنی فۆرم
+            document.getElementById('purchase-search').value = '';
+            document.getElementById('purchase-quantity').value = '1';
+            document.getElementById('purchase-unit-price').value = '';
+            document.getElementById('purchase-sale-price').value = '';
+            document.getElementById('purchase-product-details').innerHTML = '';
+            document.getElementById('purchase-form').classList.add('hidden');
+            
+            alert('کڕین بە سەرکەوتوویی تەواو بوو!');
+            updateDashboard();
+            updatePurchaseProductList();
+            updatePurchaseHistory();
+        });
+        
         function updatePurchaseProductList() {
             const searchInput = document.getElementById('purchase-product-search');
             const productListContainer = document.getElementById('purchase-product-list');
@@ -1049,6 +1263,51 @@
                     const productId = this.getAttribute('data-id');
                     deleteProduct(productId);
                 });
+            });
+        }
+
+        function updatePurchaseHistory() {
+            const searchInput = document.getElementById('purchase-history-search');
+            const historyContainer = document.getElementById('purchase-history');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                displayPurchaseHistory(query);
+            });
+            
+            displayPurchaseHistory();
+        }
+
+        function displayPurchaseHistory(query = '') {
+            const historyContainer = document.getElementById('purchase-history');
+            let filteredPurchases = purchases;
+            
+            if (query) {
+                filteredPurchases = purchases.filter(p => 
+                    p.productName.toLowerCase().includes(query) || 
+                    p.id.toString().includes(query)
+                );
+            }
+            
+            historyContainer.innerHTML = '';
+            
+            if (filterPurchases.length === 0) {
+                historyContainer.innerHTML = '<p>هیچ کڕینێک نەدۆزرایەوە</p>';
+                return;
+            }
+            
+            filteredPurchases.forEach(purchase => {
+                const purchaseCard = document.createElement('div');
+                purchaseCard.className = 'purchase-item';
+                purchaseCard.innerHTML = `
+                    <h4>کڕین: ${purchase.id}</h4>
+                    <p>پاکەت: ${purchase.productName}</p>
+                    <p>ڕۆژ: ${purchase.date}</p>
+                    <p>بڕ: ${purchase.quantity}</p>
+                    <p>نرخ: ${purchase.unitPrice} دینار</p>
+                    <p>کۆی گشتی: ${purchase.total} دینار</p>
+                `;
+                historyContainer.appendChild(purchaseCard);
             });
         }
         
