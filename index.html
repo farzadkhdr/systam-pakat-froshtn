@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستەمی فرۆشتن و کڕینی پاکەت - مامۆستا عبدوڵا</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 10px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        nav button {
+            padding: 12px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--dark);
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+        }
+        
+        nav button.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .section {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: right;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .stat-card p {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-total {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .payment-method {
+            margin: 15px 0;
+        }
+        
+        .backup-section {
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            nav {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>سیستەمی فرۆشتن و کڕینی پاکەت</h1>
+            <p>مامۆستا عبدوڵا</p>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" data-target="dashboard">داشبۆرد</button>
+            <button class="nav-btn" data-target="sales">فرۆشتنی پاکەت</button>
+            <button class="nav-btn" data-target="purchase">کڕینی پاکەت</button>
+            <button class="nav-btn" data-target="inventory">مخزن</button>
+            <button class="nav-btn" data-target="customers">کڕیارەکان</button>
+            <button class="nav-btn" data-target="settings">ڕێکخستن</button>
+        </nav>
+        
+        <!-- داشبۆرد -->
+        <section id="dashboard" class="section active">
+            <h2>داشبۆرد</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>کۆی فرۆشتن (ئەمڕۆ)</h3>
+                    <p id="today-sales">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی کڕین (ئەمڕۆ)</h3>
+                    <p id="today-purchases">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>جیاوازی</h3>
+                    <p id="today-profit">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی فرۆشتن (ئەم مانگە)</h3>
+                    <p id="month-sales">0 دینار</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>ڕاپۆرتی فرۆشتن</h3>
+                <div class="form-group">
+                    <label>کات:</label>
+                    <select id="report-period" class="form-control">
+                        <option value="today">ئەمڕۆ</option>
+                        <option value="month">ئەم مانگە</option>
+                        <option value="year">ئەم ساڵە</option>
+                    </select>
+                </div>
+                <div id="report-results">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ڕۆژ</th>
+                                <th>کۆی فرۆشتن</th>
+                                <th>کۆی کڕین</th>
+                                <th>قازانج</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-body">
+                            <!-- داتاکان لێرە دەخرێنەوە -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- فرۆشتنی پاکەت -->
+        <section id="sales" class="section">
+            <h2>فرۆشتنی پاکەت</h2>
+            
+            <div class="card">
+                <h3>گەڕان بەدوای پاکەت</h3>
+                <input type="text" class="search-box" id="product-search" placeholder="ناوی پاکەت یان بارکۆد...">
+                <div id="product-suggestions" class="suggestions"></div>
+                
+                <div id="product-results">
+                    <!-- پێشنیاری پاکەتەکان لێرە دەخرێنەوە -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>سەبەتە</h3>
+                <div id="cart-items">
+                    <!-- کاڵاکانی سەبەتە لێرە دەخرێنەوە -->
+                </div>
+                <div class="cart-total" id="cart-total">کۆی گشتی: 0 دینار</div>
+                
+                <div class="form-group">
+                    <label>ناوی کەس:</label>
+                    <input type="text" class="form-control" id="customer-name" placeholder="ناوی کەس...">
+                    <div id="customer-suggestions" class="suggestions"></div>
+                </div>
+                
+                <div class="payment-method">
+                    <label>شێوازی پارەدان:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="payment" value="cash" checked> نەقدی</label>
+                        <label><input type="radio" name="payment" value="credit"> قەرز</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="complete-sale">تەواوکردنی فرۆشتن</button>
+            </div>
+            
+            <div class="card">
+                <h3>مێژووی فرۆشتن</h3>
+                <input type="text" class="search-box" id="sales-history-search" placeholder="گەڕان لە مێژووی فرۆشتن...">
+                <div id="sales-history">
+                    <!-- مێژووی فرۆشتن لێرە دەخرێنەوە -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- کڕینی پاکەت -->
+        <section id="purchase" class="section">
+            <h2>کڕینی پاکەت</h2>
+            
+            <div class="card">
+                <h3>لیستی پاکەتەکان</h3>
+                <input type="text" class="search-box" id="purchase-product-search" placeholder="گەڕان بەدوای پاکەت...">
+                
+                <div id="purchase-product-list">
+                    <!-- لیستی پاکەتەکان لێرە دەخرێنەوە -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>زیادکردنی پاکەت</h3>
+                <div class="form-group">
+                    <label>ناوی پاکەت:</label>
+                    <input type="text" class="form-control" id="new-product-name">
+                </div>
+                
+                <div class="form-group">
+                    <label>وێنەی پاکەت:</label>
+                    <input type="file" class="form-control" id="product-image" accept="image/*">
+                </div>
+                
+                <div class="form-group">
+                    <label>بارکۆد (ئارەزوومەندانە):</label>
+                    <input type="text" class="form-control" id="product-barcode">
+                </div>
+                
+                <div class="form-group">
+                    <label>نرخی کڕین:</label>
+                    <input type="number" class="form-control" id="purchase-price">
+                </div>
+                
+                <div class="form-group">
+                    <label>نرخی فرۆشتن:</label>
+                    <input type="number" class="form-control" id="sale-price">
+                </div>
+                
+                <div class="form-group">
+                    <label>بڕی پاکەت:</label>
+                    <input type="number" class="form-control" id="product-quantity">
+                </div>
+                
+                <div class="form-group">
+                    <label>جۆری فرۆشتن:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="sale-type" value="unit" checked> تەکە</label>
+                        <label><input type="radio" name="sale-type" value="bulk"> دانە</label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="add-product">زیادکردنی پاکەت</button>
+            </div>
+        </section>
+        
+        <!-- مخزن -->
+        <section id="inventory" class="section">
+            <h2>مخزن</h2>
+            
+            <div class="card">
+                <h3>لیستی کاڵاکان</h3>
+                <input type="text" class="search-box" id="inventory-search" placeholder="گەڕان بەدوای کاڵا...">
+                
+                <div id="inventory-list">
+                    <!-- لیستی کاڵاکان لێرە دەخرێنەوە -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- کڕیارەکان -->
+        <section id="customers" class="section">
+            <h2>کڕیارەکان</h2>
+            
+            <div class="card">
+                <h3>زیادکردنی کەس</h3>
+                <div class="form-group">
+                    <label>ناوی کەس:</label>
+                    <input type="text" class="form-control" id="new-customer-name">
+                </div>
+                
+                <div class="form-group">
+                    <label>ژمارەی مۆبایل:</label>
+                    <input type="text" class="form-control" id="customer-phone">
+                </div>
+                
+                <button class="btn btn-primary" id="add-customer">زیادکردنی کەس</button>
+            </div>
+            
+            <div class="card">
+                <h3>لیستی کەسەکان</h3>
+                <input type="text" class="search-box" id="customer-search" placeholder="گەڕان بەدوای کەس...">
+                
+                <div id="customer-list">
+                    <!-- لیستی کەسەکان لێرە دەخرێنەوە -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- ڕێکخستن -->
+        <section id="settings" class="section">
+            <h2>ڕێکخستن</h2>
+            
+            <div class="card backup-section">
+                <h3>باکەپ</h3>
+                <button class="btn btn-primary" id="backup-data">دروستکردنی باکەپ</button>
+                <button class="btn btn-secondary" id="restore-data">گەڕاندنەوەی باکەپ</button>
+                <button class="btn btn-warning" id="download-backup">دانلۆدی باکەپ</button>
+                
+                <div class="form-group">
+                    <label>خوێندنەوەی باکەپ:</label>
+                    <input type="file" class="form-control" id="backup-file" accept=".json">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // داتا ستراکچەرەکان
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        let customers = JSON.parse(localStorage.getItem('customers')) || [];
+        let sales = JSON.parse(localStorage.getItem('sales')) || [];
+        let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // DOM ئەلیمنتەکان
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section');
+        
+        // ناوەژۆر کردن
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                
+                navBtns.forEach(b => b.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(target).classList.add('active');
+                
+                // نوێکردنەوەی داتاکانی هەر بەشێک
+                if (target === 'dashboard') updateDashboard();
+                if (target === 'sales') updateSalesSection();
+                if (target === 'purchase') updatePurchaseSection();
+                if (target === 'inventory') updateInventorySection();
+                if (target === 'customers') updateCustomersSection();
+            });
+        });
+        
+        // فەنکشنەکان بۆ نوێکردنەوەی بەشە جیاوازەکان
+        function updateDashboard() {
+            // کۆی فرۆشتن و کڕینی ئەمڕۆ
+            const today = new Date().toISOString().split('T')[0];
+            const todaySales = sales.filter(s => s.date === today)
+                                   .reduce((sum, sale) => sum + sale.total, 0);
+            const todayPurchases = purchases.filter(p => p.date === today)
+                                           .reduce((sum, purchase) => sum + purchase.total, 0);
+            
+            document.getElementById('today-sales').textContent = todaySales + ' دینار';
+            document.getElementById('today-purchases').textContent = todayPurchases + ' دینار';
+            document.getElementById('today-profit').textContent = (todaySales - todayPurchases) + ' دینار';
+            
+            // کۆی فرۆشتن و کڕینی ئەم مانگە
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+            const monthSales = sales.filter(s => {
+                const saleDate = new Date(s.date);
+                return saleDate.getMonth() + 1 === currentMonth && saleDate.getFullYear() === currentYear;
+            }).reduce((sum, sale) => sum + sale.total, 0);
+            
+            document.getElementById('month-sales').textContent = monthSales + ' دینار';
+            
+            // نوێکردنەوەی ڕاپۆرت
+            updateReport();
+        }
+        
+        function updateSalesSection() {
+            updateProductSuggestions();
+            updateCart();
+            updateSalesHistory();
+        }
+        
+        function updatePurchaseSection() {
+            updatePurchaseProductList();
+        }
+        
+        function updateInventorySection() {
+            updateInventoryList();
+        }
+        
+        function updateCustomersSection() {
+            updateCustomerList();
+        }
+        
+        // فەنکشنەکانی فرۆشتن
+        function updateProductSuggestions() {
+            const searchInput = document.getElementById('product-search');
+            const suggestionsContainer = document.getElementById('product-suggestions');
+            const resultsContainer = document.getElementById('product-results');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                suggestionsContainer.innerHTML = '';
+                
+                if (query.length < 2) {
+                    suggestionsContainer.style.display = 'none';
+                    resultsContainer.innerHTML = '';
+                    return;
+                }
+                
+                const filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query) || 
+                    (p.barcode && p.barcode.includes(query))
+                );
+                
+                if (filteredProducts.length > 0) {
+                    suggestionsContainer.style.display = 'block';
+                    filteredProducts.forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.textContent = product.name;
+                        item.addEventListener('click', () => {
+                            searchInput.value = product.name;
+                            suggestionsContainer.style.display = 'none';
+                            showProductDetails(product);
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+            
+            // پێشنیاری پاکەتەکان
+            const featuredProducts = products.slice(0, 5); // 5 پاکەتی یەکەم
+            resultsContainer.innerHTML = '<h4>پێشنیار:</h4>';
+            
+            featuredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'card';
+                productCard.innerHTML = `
+                    <h4>${product.name}</h4>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+                    <p>نرخ: ${product.salePrice} دینار</p>
+                    <p>بڕی ماوە: ${product.quantity}</p>
+                    <button class="btn btn-primary add-to-cart" data-id="${product.id}">زیادکردن بۆ سەبەتە</button>
+                `;
+                resultsContainer.appendChild(productCard);
+            });
+            
+            // زیادکردن بۆ سەبەتە
+            document.querySelectorAll('.add-to-cart').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    addToCart(productId);
+                });
+            });
+        }
+        
+        function showProductDetails(product) {
+            const resultsContainer = document.getElementById('product-results');
+            resultsContainer.innerHTML = `
+                <div class="card">
+                    <h4>${product.name}</h4>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+                    <p>نرخ: ${product.salePrice} دینار</p>
+                    <p>بڕی ماوە: ${product.quantity}</p>
+                    <p>جۆری فرۆشتن: ${product.saleType === 'unit' ? 'تەکە' : 'دانە'}</p>
+                    <button class="btn btn-primary add-to-cart" data-id="${product.id}">زیادکردن بۆ سەبەتە</button>
+                </div>
+            `;
+            
+            document.querySelector('.add-to-cart').addEventListener('click', function() {
+                addToCart(product.id);
+            });
+        }
+        
+        function addToCart(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+            
+            // پشکنین بۆ ئەوەی ئایە پاکەتەکە هەیە لە سەبەتەدا
+            const existingItem = cart.find(item => item.productId == productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.salePrice,
+                    quantity: 1,
+                    saleType: product.saleType
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart();
+            alert('پاکەت بە سەرکەوتوویی زیاد کرا بۆ سەبەتە');
+        }
+        
+        function updateCart() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalElement = document.getElementById('cart-total');
+            
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p>سەبەتە بەتاڵە</p>';
+                cartTotalElement.textContent = 'کۆی گشتی: 0 دینار';
+                return;
+            }
+            
+            let total = 0;
+            
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <div>
+                        <h4>${item.name}</h4>
+                        <p>نرخ: ${item.price} دینار</p>
+                        <p>بڕ: ${item.quantity}</p>
+                        <p>کۆی: ${itemTotal} دینار</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-warning edit-item" data-index="${index}">دەستکاری</button>
+                        <button class="btn btn-danger remove-item" data-index="${index}">سڕینەوە</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(cartItem);
+            });
+            
+            cartTotalElement.textContent = `کۆی گشتی: ${total} دینار`;
+            
+            // دەستکاری و سڕینەوەی کاڵا لە سەبەتە
+            document.querySelectorAll('.edit-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    editCartItem(index);
+                });
+            });
+            
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    removeCartItem(index);
+                });
+            });
+            
+            // پێشنیاری ناوی کەسەکان
+            setupCustomerSuggestions();
+        }
+        
+        function editCartItem(index) {
+            const item = cart[index];
+            const newQuantity = prompt(`بڕی نوێ بۆ ${item.name}:`, item.quantity);
+            
+            if (newQuantity && !isNaN(newQuantity) && newQuantity > 0) {
+                cart[index].quantity = parseInt(newQuantity);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCart();
+            }
+        }
+        
+        function removeCartItem(index) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم کاڵایە؟')) {
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCart();
+            }
+        }
+        
+        function setupCustomerSuggestions() {
+            const customerInput = document.getElementById('customer-name');
+            const suggestionsContainer = document.getElementById('customer-suggestions');
+            
+            customerInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                suggestionsContainer.innerHTML = '';
+                
+                if (query.length < 2) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+                
+                const filteredCustomers = customers.filter(c => 
+                    c.name.toLowerCase().includes(query)
+                );
+                
+                if (filteredCustomers.length > 0) {
+                    suggestionsContainer.style.display = 'block';
+                    filteredCustomers.forEach(customer => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.textContent = customer.name;
+                        item.addEventListener('click', () => {
+                            customerInput.value = customer.name;
+                            suggestionsContainer.style.display = 'none';
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // تەواوکردنی فرۆشتن
+        document.getElementById('complete-sale').addEventListener('click', function() {
+            if (cart.length === 0) {
+                alert('سەبەتە بەتاڵە!');
+                return;
+            }
+            
+            const customerName = document.getElementById('customer-name').value || 'کڕیاری نەناسراو';
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const today = new Date().toISOString().split('T')[0];
+            
+            // دروستکردنی فاکتۆر
+            const sale = {
+                id: Date.now(),
+                date: today,
+                customer: customerName,
+                items: [...cart],
+                total: total,
+                paymentMethod: paymentMethod
+            };
+            
+            sales.push(sale);
+            localStorage.setItem('sales', JSON.stringify(sales));
+            
+            // نوێکردنەوەی بڕی پاکەتەکان لە مخزن
+            cart.forEach(item => {
+                const product = products.find(p => p.id == item.productId);
+                if (product) {
+                    product.quantity -= item.quantity;
+                    if (product.quantity < 0) product.quantity = 0;
+                }
+            });
+            
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            // بەتاڵکردنی سەبەتە
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            updateCart();
+            document.getElementById('customer-name').value = '';
+            
+            alert('فرۆشتن بە سەرکەوتوویی تەواو بوو!');
+            
+            // پیشاندانی فاکتۆر
+            showInvoice(sale);
+        });
+        
+        function showInvoice(sale) {
+            let invoiceContent = `
+                <div class="card">
+                    <h3>فاکتۆری فرۆشتن</h3>
+                    <p>ژمارەی فاکتۆر: ${sale.id}</p>
+                    <p>ڕۆژ: ${sale.date}</p>
+                    <p>کڕیار: ${sale.customer}</p>
+                    <p>شێوازی پارەدان: ${sale.paymentMethod === 'cash' ? 'نەقدی' : 'قەرز'}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ناوی کاڵا</th>
+                                <th>بڕ</th>
+                                <th>نرخ</th>
+                                <th>کۆی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            sale.items.forEach(item => {
+                invoiceContent += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price} دینار</td>
+                        <td>${item.price * item.quantity} دینار</td>
+                    </tr>
+                `;
+            });
+            
+            invoiceContent += `
+                        </tbody>
+                    </table>
+                    <h4>کۆی گشتی: ${sale.total} دینار</h4>
+                    <button class="btn btn-primary" onclick="printInvoice()">چاپکردن</button>
+                    <button class="btn btn-secondary" onclick="closeInvoice()">داخستن</button>
+                </div>
+            `;
+            
+            const invoiceDiv = document.createElement('div');
+            invoiceDiv.id = 'invoice-modal';
+            invoiceDiv.style.position = 'fixed';
+            invoiceDiv.style.top = '0';
+            invoiceDiv.style.left = '0';
+            invoiceDiv.style.width = '100%';
+            invoiceDiv.style.height = '100%';
+            invoiceDiv.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            invoiceDiv.style.display = 'flex';
+            invoiceDiv.style.justifyContent = 'center';
+            invoiceDiv.style.alignItems = 'center';
+            invoiceDiv.style.zIndex = '1000';
+            invoiceDiv.innerHTML = invoiceContent;
+            
+            document.body.appendChild(invoiceDiv);
+        }
+        
+        function printInvoice() {
+            window.print();
+        }
+        
+        function closeInvoice() {
+            const modal = document.getElementById('invoice-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function updateSalesHistory() {
+            const searchInput = document.getElementById('sales-history-search');
+            const historyContainer = document.getElementById('sales-history');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                displaySalesHistory(query);
+            });
+            
+            displaySalesHistory();
+        }
+        
+        function displaySalesHistory(query = '') {
+            const historyContainer = document.getElementById('sales-history');
+            let filteredSales = sales;
+            
+            if (query) {
+                filteredSales = sales.filter(s => 
+                    s.customer.toLowerCase().includes(query) || 
+                    s.id.toString().includes(query)
+                );
+            }
+            
+            historyContainer.innerHTML = '';
+            
+            if (filteredSales.length === 0) {
+                historyContainer.innerHTML = '<p>هیچ فرۆشتنێک نەدۆزرایەوە</p>';
+                return;
+            }
+            
+            filteredSales.forEach(sale => {
+                const saleCard = document.createElement('div');
+                saleCard.className = 'card';
+                saleCard.innerHTML = `
+                    <h4>فاکتۆر: ${sale.id}</h4>
+                    <p>کڕیار: ${sale.customer}</p>
+                    <p>ڕۆژ: ${sale.date}</p>
+                    <p>کۆی گشتی: ${sale.total} دینار</p>
+                    <p>شێوازی پارەدان: ${sale.paymentMethod === 'cash' ? 'نەقدی' : 'قەرز'}</p>
+                    <button class="btn btn-warning edit-sale" data-id="${sale.id}">دەستکاری</button>
+                    <button class="btn btn-danger delete-sale" data-id="${sale.id}">سڕینەوە</button>
+                `;
+                historyContainer.appendChild(saleCard);
+            });
+            
+            // دەستکاری و سڕینەوەی فرۆشتن
+            document.querySelectorAll('.edit-sale').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const saleId = this.getAttribute('data-id');
+                    editSale(saleId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-sale').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const saleId = this.getAttribute('data-id');
+                    deleteSale(saleId);
+                });
+            });
+        }
+        
+        function editSale(saleId) {
+            alert('دەستکاری فرۆشتن: ' + saleId);
+            // لێرە دەتوانیت فۆرمێک بکەیتەوە بۆ دەستکاری فرۆشتن
+        }
+        
+        function deleteSale(saleId) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم فرۆشتنە؟')) {
+                sales = sales.filter(s => s.id != saleId);
+                localStorage.setItem('sales', JSON.stringify(sales));
+                updateSalesHistory();
+            }
+        }
+        
+        // فەنکشنەکانی کڕین
+        function updatePurchaseProductList() {
+            const searchInput = document.getElementById('purchase-product-search');
+            const productListContainer = document.getElementById('purchase-product-list');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                displayPurchaseProducts(query);
+            });
+            
+            displayPurchaseProducts();
+        }
+        
+        function displayPurchaseProducts(query = '') {
+            const productListContainer = document.getElementById('purchase-product-list');
+            let filteredProducts = products;
+            
+            if (query) {
+                filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query)
+                );
+            }
+            
+            productListContainer.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                productListContainer.innerHTML = '<p>هیچ پاکەتێک نەدۆزرایەوە</p>';
+                return;
+            }
+            
+            filteredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'card';
+                productCard.innerHTML = `
+                    <h4>${product.name}</h4>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="max-width: 100px;">` : ''}
+                    <p>نرخی کڕین: ${product.purchasePrice} دینار</p>
+                    <p>نرخی فرۆشتن: ${product.salePrice} دینار</p>
+                    <p>بڕی ماوە: ${product.quantity}</p>
+                    <p>جۆری فرۆشتن: ${product.saleType === 'unit' ? 'تەکە' : 'دانە'}</p>
+                    <button class="btn btn-warning edit-product" data-id="${product.id}">دەستکاری</button>
+                    <button class="btn btn-danger delete-product" data-id="${product.id}">سڕینەوە</button>
+                `;
+                productListContainer.appendChild(productCard);
+            });
+            
+            // دەستکاری و سڕینەوەی پاکەت
+            document.querySelectorAll('.edit-product').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    editProduct(productId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-product').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    deleteProduct(productId);
+                });
+            });
+        }
+        
+        function editProduct(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+            
+            document.getElementById('new-product-name').value = product.name;
+            document.getElementById('product-barcode').value = product.barcode || '';
+            document.getElementById('purchase-price').value = product.purchasePrice;
+            document.getElementById('sale-price').value = product.salePrice;
+            document.getElementById('product-quantity').value = product.quantity;
+            
+            const saleTypeRadios = document.getElementsByName('sale-type');
+            for (let radio of saleTypeRadios) {
+                if (radio.value === product.saleType) {
+                    radio.checked = true;
+                    break;
+                }
+            }
+            
+            // گۆڕینی فەنکشنی زیادکردن بۆ نوێکردنەوە
+            const addButton = document.getElementById('add-product');
+            addButton.textContent = 'نوێکردنەوەی پاکەت';
+            addButton.onclick = function() {
+                updateProduct(productId);
+            };
+            
+            // گواستنەوە بۆ بەشی کڕین
+            document.querySelector('.nav-btn[data-target="purchase"]').click();
+        }
+        
+        function updateProduct(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+            
+            product.name = document.getElementById('new-product-name').value;
+            product.barcode = document.getElementById('product-barcode').value;
+            product.purchasePrice = parseFloat(document.getElementById('purchase-price').value);
+            product.salePrice = parseFloat(document.getElementById('sale-price').value);
+            product.quantity = parseInt(document.getElementById('product-quantity').value);
+            
+            const saleTypeRadios = document.getElementsByName('sale-type');
+            for (let radio of saleTypeRadios) {
+                if (radio.checked) {
+                    product.saleType = radio.value;
+                    break;
+                }
+            }
+            
+            // وێنە
+            const imageFile = document.getElementById('product-image').files[0];
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    product.image = e.target.result;
+                    saveProductsAndUpdate();
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                saveProductsAndUpdate();
+            }
+            
+            function saveProductsAndUpdate() {
+                localStorage.setItem('products', JSON.stringify(products));
+                updatePurchaseProductList();
+                
+                // ڕێستکردنی فۆرم
+                document.getElementById('new-product-name').value = '';
+                document.getElementById('product-barcode').value = '';
+                document.getElementById('purchase-price').value = '';
+                document.getElementById('sale-price').value = '';
+                document.getElementById('product-quantity').value = '';
+                document.getElementById('product-image').value = '';
+                
+                const addButton = document.getElementById('add-product');
+                addButton.textContent = 'زیادکردنی پاکەت';
+                addButton.onclick = addNewProduct;
+                
+                alert('پاکەت بە سەرکەوتوویی نوێ کرایەوە');
+            }
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم پاکەتە؟')) {
+                products = products.filter(p => p.id != productId);
+                localStorage.setItem('products', JSON.stringify(products));
+                updatePurchaseProductList();
+            }
+        }
+        
+        // زیادکردنی پاکەتی نوێ
+        document.getElementById('add-product').addEventListener('click', addNewProduct);
+        
+        function addNewProduct() {
+            const name = document.getElementById('new-product-name').value;
+            const barcode = document.getElementById('product-barcode').value;
+            const purchasePrice = parseFloat(document.getElementById('purchase-price').value);
+            const salePrice = parseFloat(document.getElementById('sale-price').value);
+            const quantity = parseInt(document.getElementById('product-quantity').value);
+            
+            if (!name || isNaN(purchasePrice) || isNaN(salePrice) || isNaN(quantity)) {
+                alert('تکایە هەموو خانە پێویستەکان پڕ بکەرەوە');
+                return;
+            }
+            
+            const saleTypeRadios = document.getElementsByName('sale-type');
+            let saleType = 'unit'; // Default
+            for (let radio of saleTypeRadios) {
+                if (radio.checked) {
+                    saleType = radio.value;
+                    break;
+                }
+            }
+            
+            const newProduct = {
+                id: Date.now(),
+                name: name,
+                barcode: barcode,
+                purchasePrice: purchasePrice,
+                salePrice: salePrice,
+                quantity: quantity,
+                saleType: saleType
+            };
+            
+            // وێنە
+            const imageFile = document.getElementById('product-image').files[0];
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    newProduct.image = e.target.result;
+                    saveProduct();
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                saveProduct();
+            }
+            
+            function saveProduct() {
+                products.push(newProduct);
+                localStorage.setItem('products', JSON.stringify(products));
+                
+                // ڕێستکردنی فۆرم
+                document.getElementById('new-product-name').value = '';
+                document.getElementById('product-barcode').value = '';
+                document.getElementById('purchase-price').value = '';
+                document.getElementById('sale-price').value = '';
+                document.getElementById('product-quantity').value = '';
+                document.getElementById('product-image').value = '';
+                
+                updatePurchaseProductList();
+                alert('پاکەت بە سەرکەوتوویی زیاد کرا');
+            }
+        }
+        
+        // فەنکشنەکانی مخزن
+        function updateInventoryList() {
+            const searchInput = document.getElementById('inventory-search');
+            const inventoryContainer = document.getElementById('inventory-list');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                displayInventory(query);
+            });
+            
+            displayInventory();
+        }
+        
+        function displayInventory(query = '') {
+            const inventoryContainer = document.getElementById('inventory-list');
+            let filteredProducts = products;
+            
+            if (query) {
+                filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query) ||
+                    (p.barcode && p.barcode.includes(query))
+                );
+            }
+            
+            inventoryContainer.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                inventoryContainer.innerHTML = '<p>هیچ کاڵایەک نەدۆزرایەوە</p>';
+                return;
+            }
+            
+            filteredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'card';
+                productCard.innerHTML = `
+                    <h4>${product.name}</h4>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="max-width: 100px;">` : ''}
+                    <p>بارکۆد: ${product.barcode || 'نییە'}</p>
+                    <p>نرخی کڕین: ${product.purchasePrice} دینار</p>
+                    <p>نرخی فرۆشتن: ${product.salePrice} دینار</p>
+                    <p>بڕی ماوە: ${product.quantity}</p>
+                    <p>جۆری فرۆشتن: ${product.saleType === 'unit' ? 'تەکە' : 'دانە'}</p>
+                `;
+                inventoryContainer.appendChild(productCard);
+            });
+        }
+        
+        // فەنکشنەکانی کڕیارەکان
+        function updateCustomerList() {
+            const searchInput = document.getElementById('customer-search');
+            const customerContainer = document.getElementById('customer-list');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                displayCustomers(query);
+            });
+            
+            displayCustomers();
+        }
+        
+        function displayCustomers(query = '') {
+            const customerContainer = document.getElementById('customer-list');
+            let filteredCustomers = customers;
+            
+            if (query) {
+                filteredCustomers = customers.filter(c => 
+                    c.name.toLowerCase().includes(query) ||
+                    (c.phone && c.phone.includes(query))
+                );
+            }
+            
+            customerContainer.innerHTML = '';
+            
+            if (filteredCustomers.length === 0) {
+                customerContainer.innerHTML = '<p>هیچ کەسێک نەدۆزرایەوە</p>';
+                return;
+            }
+            
+            filteredCustomers.forEach(customer => {
+                // کۆی قەرز
+                const customerDebt = sales
+                    .filter(s => s.customer === customer.name && s.paymentMethod === 'credit')
+                    .reduce((sum, sale) => sum + sale.total, 0);
+                
+                const customerCard = document.createElement('div');
+                customerCard.className = 'card';
+                customerCard.innerHTML = `
+                    <h4>${customer.name}</h4>
+                    <p>ژمارەی مۆبایل: ${customer.phone || 'نییە'}</p>
+                    <p>بڕی قەرز: ${customerDebt} دینار</p>
+                    <button class="btn btn-warning edit-customer" data-id="${customer.id}">دەستکاری</button>
+                    <button class="btn btn-danger delete-customer" data-id="${customer.id}">سڕینەوە</button>
+                `;
+                customerContainer.appendChild(customerCard);
+            });
+            
+            // دەستکاری و سڕینەوەی کەس
+            document.querySelectorAll('.edit-customer').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    editCustomer(customerId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-customer').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    deleteCustomer(customerId);
+                });
+            });
+        }
+        
+        function editCustomer(customerId) {
+            const customer = customers.find(c => c.id == customerId);
+            if (!customer) return;
+            
+            document.getElementById('new-customer-name').value = customer.name;
+            document.getElementById('customer-phone').value = customer.phone || '';
+            
+            // گۆڕینی فەنکشنی زیادکردن بۆ نوێکردنەوە
+            const addButton = document.getElementById('add-customer');
+            addButton.textContent = 'نوێکردنەوەی کەس';
+            addButton.onclick = function() {
+                updateCustomer(customerId);
+            };
+        }
+        
+        function updateCustomer(customerId) {
+            const customer = customers.find(c => c.id == customerId);
+            if (!customer) return;
+            
+            customer.name = document.getElementById('new-customer-name').value;
+            customer.phone = document.getElementById('customer-phone').value;
+            
+            localStorage.setItem('customers', JSON.stringify(customers));
+            updateCustomerList();
+            
+            // ڕێستکردنی فۆرم
+            document.getElementById('new-customer-name').value = '';
+            document.getElementById('customer-phone').value = '';
+            
+            const addButton = document.getElementById('add-customer');
+            addButton.textContent = 'زیادکردنی کەس';
+            addButton.onclick = addNewCustomer;
+            
+            alert('کەس بە سەرکەوتوویی نوێ کرایەوە');
+        }
+        
+        function deleteCustomer(customerId) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم کەسە؟')) {
+                customers = customers.filter(c => c.id != customerId);
+                localStorage.setItem('customers', JSON.stringify(customers));
+                updateCustomerList();
+            }
+        }
+        
+        // زیادکردنی کەسی نوێ
+        document.getElementById('add-customer').addEventListener('click', addNewCustomer);
+        
+        function addNewCustomer() {
+            const name = document.getElementById('new-customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            
+            if (!name) {
+                alert('تکایە ناو بنووسە');
+                return;
+            }
+            
+            const newCustomer = {
+                id: Date.now(),
+                name: name,
+                phone: phone
+            };
+            
+            customers.push(newCustomer);
+            localStorage.setItem('customers', JSON.stringify(customers));
+            
+            // ڕێستکردنی فۆرم
+            document.getElementById('new-customer-name').value = '';
+            document.getElementById('customer-phone').value = '';
+            
+            updateCustomerList();
+            alert('کەس بە سەرکەوتوویی زیاد کرا');
+        }
+        
+        // فەنکشنەکانی ڕاپۆرت
+        function updateReport() {
+            const period = document.getElementById('report-period').value;
+            const reportBody = document.getElementById('report-body');
+            
+            reportBody.innerHTML = '';
+            
+            let reportData = [];
+            
+            if (period === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                const todaySales = sales.filter(s => s.date === today)
+                                       .reduce((sum, sale) => sum + sale.total, 0);
+                const todayPurchases = purchases.filter(p => p.date === today)
+                                               .reduce((sum, purchase) => sum + purchase.total, 0);
+                
+                reportData.push({
+                    date: 'ئەمڕۆ',
+                    sales: todaySales,
+                    purchases: todayPurchases,
+                    profit: todaySales - todayPurchases
+                });
+            } else if (period === 'month') {
+                const currentMonth = new Date().getMonth() + 1;
+                const currentYear = new Date().getFullYear();
+                
+                // کۆکردنەوەی داتا بۆ هەر ڕۆژێک لەم مانگە
+                const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    
+                    const daySales = sales.filter(s => s.date === dateStr)
+                                         .reduce((sum, sale) => sum + sale.total, 0);
+                    const dayPurchases = purchases.filter(p => p.date === dateStr)
+                                                 .reduce((sum, purchase) => sum + purchase.total, 0);
+                    
+                    if (daySales > 0 || dayPurchases > 0) {
+                        reportData.push({
+                            date: `${day}/${currentMonth}/${currentYear}`,
+                            sales: daySales,
+                            purchases: dayPurchases,
+                            profit: daySales - dayPurchases
+                        });
+                    }
+                }
+            } else if (period === 'year') {
+                const currentYear = new Date().getFullYear();
+                
+                // کۆکردنەوەی داتا بۆ هەر مانگێک لەم ساڵە
+                for (let month = 1; month <= 12; month++) {
+                    const monthSales = sales.filter(s => {
+                        const saleDate = new Date(s.date);
+                        return saleDate.getFullYear() === currentYear && saleDate.getMonth() + 1 === month;
+                    }).reduce((sum, sale) => sum + sale.total, 0);
+                    
+                    const monthPurchases = purchases.filter(p => {
+                        const purchaseDate = new Date(p.date);
+                        return purchaseDate.getFullYear() === currentYear && purchaseDate.getMonth() + 1 === month;
+                    }).reduce((sum, purchase) => sum + purchase.total, 0);
+                    
+                    if (monthSales > 0 || monthPurchases > 0) {
+                        const monthNames = ['کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 
+                                           'تەممووز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'];
+                        
+                        reportData.push({
+                            date: monthNames[month-1],
+                            sales: monthSales,
+                            purchases: monthPurchases,
+                            profit: monthSales - monthPurchases
+                        });
+                    }
+                }
+            }
+            
+            if (reportData.length === 0) {
+                reportBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">هیچ داتایەک نەدۆزرایەوە</td></tr>';
+                return;
+            }
+            
+            reportData.forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.date}</td>
+                    <td>${data.sales} دینار</td>
+                    <td>${data.purchases} دینار</td>
+                    <td>${data.profit} دینار</td>
+                `;
+                reportBody.appendChild(row);
+            });
+        }
+        
+        document.getElementById('report-period').addEventListener('change', updateReport);
+        
+        // فەنکشنەکانی باکەپ
+        document.getElementById('backup-data').addEventListener('click', function() {
+            const backupData = {
+                products: products,
+                customers: customers,
+                sales: sales,
+                purchases: purchases,
+                backupDate: new Date().toISOString()
+            };
+            
+            localStorage.setItem('backup', JSON.stringify(backupData));
+            alert('باکەپ بە سەرکەوتوویی دروست کرا');
+        });
+        
+        document.getElementById('restore-data').addEventListener('click', function() {
+            const backupFile = document.getElementById('backup-file').files[0];
+            if (!backupFile) {
+                alert('تکایە فایلی باکەپ هەڵبژێرە');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (confirm('دڵنیای لە گەڕاندنەوەی باکەپ؟ ئەم کارە هەموو داتاکانی ئێستا دەسڕێتەوە')) {
+                        products = backupData.products || [];
+                        customers = backupData.customers || [];
+                        sales = backupData.sales || [];
+                        purchases = backupData.purchases || [];
+                        
+                        localStorage.setItem('products', JSON.stringify(products));
+                        localStorage.setItem('customers', JSON.stringify(customers));
+                        localStorage.setItem('sales', JSON.stringify(sales));
+                        localStorage.setItem('purchases', JSON.stringify(purchases));
+                        
+                        alert('باکەپ بە سەرکەوتوویی گەڕێندرایەوە');
+                        location.reload();
+                    }
+                } catch (error) {
+                    alert('هەڵە لە خوێندنەوەی فایلی باکەپ: ' + error.message);
+                }
+            };
+            reader.readAsText(backupFile);
+        });
+        
+        document.getElementById('download-backup').addEventListener('click', function() {
+            const backupData = {
+                products: products,
+                customers: customers,
+                sales: sales,
+                purchases: purchases,
+                backupDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup-mamosta-abdulla-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('باکەپ بە سەرکەوتوویی داگرت');
+        });
+        
+        // دەستپێک کردن
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDashboard();
+            updateSalesSection();
+            
+            // زیادکردنی چەند پاکەتی نموونەیی
+            if (products.length === 0) {
+                products = [
+                    {
+                        id: 1,
+                        name: 'پاکەتی چای',
+                        purchasePrice: 500,
+                        salePrice: 700,
+                        quantity: 100,
+                        saleType: 'unit'
+                    },
+                    {
+                        id: 2,
+                        name: 'پاکەتی شەکر',
+                        purchasePrice: 800,
+                        salePrice: 1000,
+                        quantity: 50,
+                        saleType: 'bulk'
+                    },
+                    {
+                        id: 3,
+                        name: 'پاکەتی برنج',
+                        purchasePrice: 1500,
+                        salePrice: 2000,
+                        quantity: 30,
+                        saleType: 'bulk'
+                    }
+                ];
+                localStorage.setItem('products', JSON.stringify(products));
+            }
+            
+            // زیادکردنی چەند کەسی نموونەیی
+            if (customers.length === 0) {
+                customers = [
+                    {
+                        id: 1,
+                        name: 'عەلی',
+                        phone: '07501234567'
+                    },
+                    {
+                        id: 2,
+                        name: 'حسێن',
+                        phone: '07507654321'
+                    }
+                ];
+                localStorage.setItem('customers', JSON.stringify(customers));
+            }
+        });
+    </script>
+</body>
+</html>
