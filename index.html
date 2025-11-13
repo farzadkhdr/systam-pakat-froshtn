@@ -352,6 +352,14 @@
                     <h3>جیاوازی گشتی</h3>
                     <p id="total-profit">0 دینار</p>
                 </div>
+                <div class="stat-card">
+                    <h3>کۆی قەرزی کڕیارەکان</h3>
+                    <p id="total-customer-debts">0 دینار</p>
+                </div>
+                <div class="stat-card">
+                    <h3>کۆی قەرزی شەریکەکان</h3>
+                    <p id="total-partner-debts">0 دینار</p>
+                </div>
             </div>
             
             <div class="card">
@@ -793,6 +801,14 @@
             const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
             const totalPurchases = purchases.reduce((sum, purchase) => sum + purchase.total, 0);
             
+            // قەرزی کڕیارەکان
+            const customerDebts = sales
+                .filter(s => s.paymentMethod === 'credit')
+                .reduce((sum, sale) => sum + sale.total, 0);
+            
+            // قەرزی شەریکەکان
+            const partnerDebts = partners.reduce((sum, partner) => sum + partner.debt, 0);
+            
             // نوێکردنەوەی نمایش
             document.getElementById('today-sales').textContent = todaySales + ' دینار';
             document.getElementById('today-purchases').textContent = todayPurchases + ' دینار';
@@ -805,6 +821,9 @@
             document.getElementById('total-sales').textContent = totalSales + ' دینار';
             document.getElementById('total-purchases').textContent = totalPurchases + ' دینار';
             document.getElementById('total-profit').textContent = (totalSales - totalPurchases) + ' دینار';
+            
+            document.getElementById('total-customer-debts').textContent = customerDebts + ' دینار';
+            document.getElementById('total-partner-debts').textContent = partnerDebts + ' دینار';
             
             updateReport();
         }
@@ -1127,7 +1146,9 @@
                 customer: customerName,
                 items: [...cart],
                 total: total,
-                paymentMethod: paymentMethod
+                paymentMethod: paymentMethod,
+                // زیادکردنی بارەگای قەرز
+                debtStatus: paymentMethod === 'credit' ? 'قەرز' : 'پارەکراو'
             };
             
             sales.push(sale);
@@ -1155,6 +1176,9 @@
             
             // پیشاندانی فاکتۆر
             showInvoice(sale);
+            
+            // نوێکردنەوەی داشبۆرد
+            updateDashboard();
         });
         
         function showInvoice(sale) {
@@ -1296,6 +1320,7 @@
                 sales = sales.filter(s => s.id != saleId);
                 localStorage.setItem('sales', JSON.stringify(sales));
                 updateSalesHistory();
+                updateDashboard();
             }
         }
 
@@ -2498,6 +2523,12 @@
                 return;
             }
             
+            // پشکنین بۆ ئەوەی ئایا قەرز هەیە
+            if (amount > partner.debt) {
+                alert(`بڕی سەرف نابێت زیاتر بێت لە قەرز! قەرز: ${partner.debt} دینار`);
+                return;
+            }
+            
             // دروستکردنی سەرف
             const expense = {
                 id: Date.now(),
@@ -2511,8 +2542,8 @@
             
             expenses.push(expense);
             
-            // زیادکردنی قەرز بۆ شەریک
-            partner.debt += amount;
+            // کەمکردنەوەی قەرز لە شەریک
+            partner.debt -= amount;
             
             // کەمکردنەوە لە کۆی فرۆشتن ئەگەر داواکرابوو
             if (reduceSales) {
@@ -2541,9 +2572,10 @@
             document.getElementById('expense-reason').value = '';
             document.getElementById('expense-partner-info').classList.add('hidden');
             
-            alert('سەرف بە سەرکەوتوویی زیاد کرا');
+            alert('سەرف بە سەرکەوتوویی زیاد کرا و قەرز کەم کراەوە');
             updateExpenseHistory();
             updatePartnerList();
+            updatePartnerDebtHistory();
         }
 
         // نوێکردنەوەی مێژووی سەرف
