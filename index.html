@@ -232,6 +232,14 @@
         .suggestion-item:hover {
             background-color: #f5f5f5;
         }
+
+        .suggestion-header {
+            font-weight: bold;
+            padding: 8px 10px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            color: #2c3e50;
+        }
         
         .hidden {
             display: none;
@@ -970,7 +978,7 @@
             const product = products.find(p => p.id == productId);
             if (!product) return;
             
-            // پشکنین بۆ ئەوەی ئایە پاکەتەکە هەیە لە سەبەتەدا
+            // پشکنین بۆ ئەوەی ئایا پاکەتەکە هەیە لە سەبەتەدا
             const existingItem = cart.find(item => item.productId == productId);
             
             if (existingItem) {
@@ -1306,21 +1314,70 @@
                 const query = this.value.toLowerCase();
                 suggestionsContainer.innerHTML = '';
                 
-                if (query.length < 2) {
+                if (query.length < 1) {
                     suggestionsContainer.style.display = 'none';
                     return;
                 }
                 
+                // گەڕان بەدوای پاکەتەکان
                 const filteredProducts = products.filter(p => 
                     p.name.toLowerCase().includes(query)
                 );
                 
+                // گەڕان بەدوای شەریکەکان
+                const filteredPartners = partners.filter(partner => 
+                    partner.name.toLowerCase().includes(query)
+                );
+                
+                let hasSuggestions = false;
+                
+                // پیشاندانی شەریکەکان لە پێشنیارەکان
+                if (filteredPartners.length > 0) {
+                    hasSuggestions = true;
+                    const partnerHeader = document.createElement('div');
+                    partnerHeader.className = 'suggestion-header';
+                    partnerHeader.textContent = 'شەریکەکان';
+                    partnerHeader.style.fontWeight = 'bold';
+                    partnerHeader.style.padding = '8px 10px';
+                    partnerHeader.style.backgroundColor = '#f8f9fa';
+                    partnerHeader.style.borderBottom = '1px solid #ddd';
+                    suggestionsContainer.appendChild(partnerHeader);
+                    
+                    filteredPartners.forEach(partner => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.innerHTML = `
+                            <div>${partner.name}</div>
+                            <small style="color: #666;">شەریک - قەرز: ${partner.debt} دینار</small>
+                        `;
+                        item.addEventListener('click', () => {
+                            searchInput.value = partner.name;
+                            suggestionsContainer.style.display = 'none';
+                            selectPartnerForPurchase(partner);
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                }
+                
+                // پیشاندانی پاکەتەکان لە پێشنیارەکان
                 if (filteredProducts.length > 0) {
-                    suggestionsContainer.style.display = 'block';
+                    hasSuggestions = true;
+                    const productHeader = document.createElement('div');
+                    productHeader.className = 'suggestion-header';
+                    productHeader.textContent = 'پاکەتەکان';
+                    productHeader.style.fontWeight = 'bold';
+                    productHeader.style.padding = '8px 10px';
+                    productHeader.style.backgroundColor = '#f8f9fa';
+                    productHeader.style.borderBottom = '1px solid #ddd';
+                    suggestionsContainer.appendChild(productHeader);
+                    
                     filteredProducts.forEach(product => {
                         const item = document.createElement('div');
                         item.className = 'suggestion-item';
-                        item.textContent = product.name;
+                        item.innerHTML = `
+                            <div>${product.name}</div>
+                            <small style="color: #666;">پاکەت - نرخ: ${product.salePrice} دینار</small>
+                        `;
                         item.addEventListener('click', () => {
                             searchInput.value = product.name;
                             suggestionsContainer.style.display = 'none';
@@ -1328,10 +1385,28 @@
                         });
                         suggestionsContainer.appendChild(item);
                     });
-                } else {
-                    suggestionsContainer.style.display = 'none';
                 }
+                
+                suggestionsContainer.style.display = hasSuggestions ? 'block' : 'none';
             });
+        }
+
+        // فەنکشنی نوێ بۆ هەڵبژاردنی شەریک
+        function selectPartnerForPurchase(partner) {
+            const detailsContainer = document.getElementById('purchase-product-details');
+            detailsContainer.innerHTML = `
+                <div class="card">
+                    <h4>کڕین لە: ${partner.name}</h4>
+                    <p>ژمارەی مۆبایل: ${partner.phone || 'نییە'}</p>
+                    <p>بڕی قەرز: ${partner.debt} دینار</p>
+                    <p>تێبینی: کڕین لەم شەریکە ئەتوانێ قەرزی زیاد بکات</p>
+                </div>
+            `;
+            
+            // ڕێستکردنی خانەکان
+            document.getElementById('purchase-unit-price').value = '';
+            document.getElementById('purchase-sale-price').value = '';
+            document.getElementById('purchase-quantity').value = '1';
         }
 
         function showPurchaseProductDetails(product) {
@@ -1353,62 +1428,48 @@
 
         // پشتڕاستکردنەوەی کڕین
         document.getElementById('confirm-purchase').addEventListener('click', function() {
-            const productName = document.getElementById('purchase-search').value;
+            const searchValue = document.getElementById('purchase-search').value;
             const quantity = parseInt(document.getElementById('purchase-quantity').value);
             const unitPrice = parseFloat(document.getElementById('purchase-unit-price').value);
             const salePrice = parseFloat(document.getElementById('purchase-sale-price').value);
             
-            if (!productName || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
+            if (!searchValue || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
                 alert('تکایە هەموو خانەکان پڕ بکەرەوە');
                 return;
             }
             
-            // پرسیار لە بەکارهێنەر کە ئایا کڕین لە شەریکە؟
-            const isFromPartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
-            let partnerName = '';
+            // پشکنین بۆ ئەوەی ئایا کڕین لە شەریکە یان پاکەتێکی نوێ
+            const isPartner = partners.some(p => p.name === searchValue);
+            const isProduct = products.some(p => p.name === searchValue);
             
-            if (isFromPartner) {
-                partnerName = prompt('ناوی شەریک بنووسە:');
-                if (partnerName) {
-                    // دۆزینەوەی شەریک
-                    let partner = partners.find(p => p.name === partnerName);
-                    const today = new Date().toISOString().split('T')[0];
-                    
-                    if (!partner) {
-                        // دروستکردنی شەریکی نوێ
-                        partner = {
-                            id: Date.now(),
-                            name: partnerName,
-                            phone: '',
-                            debt: 0,
-                            transactions: []
-                        };
-                        partners.push(partner);
-                    }
-                    
-                    // پرسیار لە جۆری پارەدان
-                    const paymentType = confirm('پارەدان نەقدیە؟ (Cancel بۆ قەرز)') ? 'cash' : 'credit';
-                    
-                    // تۆمارکردنی کڕین لە شەریک
-                    if (!partner.transactions) partner.transactions = [];
-                    partner.transactions.push({
-                        date: today,
-                        type: 'purchase',
-                        productName: productName,
-                        quantity: quantity,
-                        price: unitPrice,
-                        total: quantity * unitPrice,
-                        paymentType: paymentType
-                    });
-                    
-                    // زیادکردنی قەرز ئەگەر قەرز بوو
-                    if (paymentType === 'credit') {
-                        partner.debt += quantity * unitPrice;
-                    }
-                    
-                    localStorage.setItem('partners', JSON.stringify(partners));
+            let partnerName = '';
+            let productName = '';
+            
+            if (isPartner) {
+                partnerName = searchValue;
+                productName = prompt('ناوی پاکەتی کڕدراو بنووسە:');
+                if (!productName) {
+                    alert('تکایە ناوی پاکەت بنووسە');
+                    return;
+                }
+            } else if (isProduct) {
+                productName = searchValue;
+                // پرسیار لە بەکارهێنەر کە ئایا کڕین لە شەریکە؟
+                const usePartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
+                if (usePartner) {
+                    partnerName = prompt('ناوی شەریک بنووسە:');
+                }
+            } else {
+                // پاکەتێکی نوێ
+                productName = searchValue;
+                const usePartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
+                if (usePartner) {
+                    partnerName = prompt('ناوی شەریک بنووسە:');
                 }
             }
+            
+            // پرسیار لە جۆری پارەدان
+            const paymentType = confirm('پارەدان نەقدیە؟ (Cancel بۆ قەرز)') ? 'cash' : 'credit';
             
             // دروستکردنی یان نوێکردنەوەی پاکەت
             let product = products.find(p => p.name === productName);
@@ -1438,10 +1499,45 @@
                 quantity: quantity,
                 unitPrice: unitPrice,
                 total: quantity * unitPrice,
-                partner: partnerName || null
+                partner: partnerName || null,
+                paymentType: paymentType
             };
             
             purchases.push(purchase);
+            
+            // تۆمارکردنی قەرز ئەگەر کڕین لە شەریک بوو و قەرز بوو
+            if (partnerName && paymentType === 'credit') {
+                let partner = partners.find(p => p.name === partnerName);
+                
+                if (!partner) {
+                    // دروستکردنی شەریکی نوێ
+                    partner = {
+                        id: Date.now(),
+                        name: partnerName,
+                        phone: '',
+                        debt: 0,
+                        transactions: []
+                    };
+                    partners.push(partner);
+                }
+                
+                // زیادکردنی قەرز
+                partner.debt += quantity * unitPrice;
+                
+                // تۆمارکردنی کڕین لە شەریک
+                if (!partner.transactions) partner.transactions = [];
+                partner.transactions.push({
+                    date: today,
+                    type: 'purchase',
+                    productName: productName,
+                    quantity: quantity,
+                    price: unitPrice,
+                    total: quantity * unitPrice,
+                    paymentType: paymentType
+                });
+                
+                localStorage.setItem('partners', JSON.stringify(partners));
+            }
             
             // پاشەکەوتکردنی داتاکان
             localStorage.setItem('products', JSON.stringify(products));
@@ -1541,6 +1637,7 @@
             if (query) {
                 filteredPurchases = purchases.filter(p => 
                     p.productName.toLowerCase().includes(query) || 
+                    (p.partner && p.partner.toLowerCase().includes(query)) ||
                     p.id.toString().includes(query)
                 );
             }
@@ -1563,9 +1660,128 @@
                     <p>نرخ: ${purchase.unitPrice} دینار</p>
                     <p>کۆی گشتی: ${purchase.total} دینار</p>
                     ${purchase.partner ? `<p>شەریک: ${purchase.partner}</p>` : ''}
+                    <p>جۆری پارەدان: ${purchase.paymentType === 'cash' ? 'نەقدی' : 'قەرز'}</p>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-warning edit-purchase" data-id="${purchase.id}">دەستکاری</button>
+                        <button class="btn btn-danger delete-purchase" data-id="${purchase.id}">سڕینەوە</button>
+                    </div>
                 `;
                 historyContainer.appendChild(purchaseCard);
             });
+            
+            // دەستکاری و سڕینەوەی کڕین
+            document.querySelectorAll('.edit-purchase').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const purchaseId = this.getAttribute('data-id');
+                    editPurchase(purchaseId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-purchase').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const purchaseId = this.getAttribute('data-id');
+                    deletePurchase(purchaseId);
+                });
+            });
+        }
+
+        // فەنکشنی دەستکاری کڕین
+        function editPurchase(purchaseId) {
+            const purchase = purchases.find(p => p.id == purchaseId);
+            if (!purchase) return;
+            
+            const newQuantity = parseInt(prompt(`بڕی نوێ بۆ ${purchase.productName} (بڕی ئێستا: ${purchase.quantity}):`, purchase.quantity));
+            const newUnitPrice = parseFloat(prompt(`نرخی کڕینی نوێ (نرخی ئێستا: ${purchase.unitPrice}):`, purchase.unitPrice));
+            
+            if (newQuantity && !isNaN(newQuantity) && newUnitPrice && !isNaN(newUnitPrice)) {
+                const oldTotal = purchase.total;
+                const newTotal = newQuantity * newUnitPrice;
+                
+                // نوێکردنەوەی پاکەت لە مخزن
+                const product = products.find(p => p.name === purchase.productName);
+                if (product) {
+                    const quantityDifference = newQuantity - purchase.quantity;
+                    product.quantity += quantityDifference;
+                    product.purchasePrice = newUnitPrice;
+                }
+                
+                // نوێکردنەوەی قەرز ئەگەر کڕین لە شەریک بوو
+                if (purchase.partner && purchase.paymentType === 'credit') {
+                    const partner = partners.find(p => p.name === purchase.partner);
+                    if (partner) {
+                        partner.debt = partner.debt - oldTotal + newTotal;
+                        
+                        // نوێکردنەوەی حرکات لە شەریک
+                        if (partner.transactions) {
+                            const transaction = partner.transactions.find(t => 
+                                t.type === 'purchase' && t.productName === purchase.productName && t.date === purchase.date
+                            );
+                            if (transaction) {
+                                transaction.quantity = newQuantity;
+                                transaction.price = newUnitPrice;
+                                transaction.total = newTotal;
+                            }
+                        }
+                        
+                        localStorage.setItem('partners', JSON.stringify(partners));
+                    }
+                }
+                
+                // نوێکردنەوەی کڕین
+                purchase.quantity = newQuantity;
+                purchase.unitPrice = newUnitPrice;
+                purchase.total = newTotal;
+                
+                localStorage.setItem('products', JSON.stringify(products));
+                localStorage.setItem('purchases', JSON.stringify(purchases));
+                updatePurchaseHistory();
+                updatePurchaseProductList();
+                updateDashboard();
+                
+                alert('کڕین بە سەرکەوتوویی نوێ کرایەوە');
+            }
+        }
+
+        // فەنکشنی سڕینەوەی کڕین
+        function deletePurchase(purchaseId) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم کڕینە؟')) {
+                const purchase = purchases.find(p => p.id == purchaseId);
+                if (purchase) {
+                    // کەمکردنەوەی بڕی پاکەت لە مخزن
+                    const product = products.find(p => p.name === purchase.productName);
+                    if (product) {
+                        product.quantity -= purchase.quantity;
+                        if (product.quantity < 0) product.quantity = 0;
+                    }
+                    
+                    // کەمکردنەوەی قەرز ئەگەر کڕین لە شەریک بوو
+                    if (purchase.partner && purchase.paymentType === 'credit') {
+                        const partner = partners.find(p => p.name === purchase.partner);
+                        if (partner) {
+                            partner.debt -= purchase.total;
+                            
+                            // سڕینەوەی حرکات لە شەریک
+                            if (partner.transactions) {
+                                partner.transactions = partner.transactions.filter(t => 
+                                    !(t.type === 'purchase' && t.productName === purchase.productName && t.date === purchase.date)
+                                );
+                            }
+                            
+                            localStorage.setItem('partners', JSON.stringify(partners));
+                        }
+                    }
+                    
+                    localStorage.setItem('products', JSON.stringify(products));
+                }
+                
+                purchases = purchases.filter(p => p.id != purchaseId);
+                localStorage.setItem('purchases', JSON.stringify(purchases));
+                updatePurchaseHistory();
+                updatePurchaseProductList();
+                updateDashboard();
+                
+                alert('کڕین بە سەرکەوتوویی سڕایەوە');
+            }
         }
         
         function editProduct(productId) {
