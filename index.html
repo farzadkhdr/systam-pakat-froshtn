@@ -439,7 +439,7 @@
         
         <!-- کڕینی پاکەت -->
         <section id="purchase" class="section">
-            <h2>کڕینی پاکەت</h2>
+            <h2>کڕینی پакەت</h2>
             
             <div class="card">
                 <h3>کڕینی پاکەت</h3>
@@ -780,26 +780,32 @@
             const currentMonth = new Date().getMonth() + 1;
             const currentYear = new Date().getFullYear();
             
-            // ئامارەکانی ئەمڕۆ
-            const todaySales = sales.filter(s => s.date === today)
+            // ئامارەکانی ئەمڕۆ - فرۆشتنە نەقدیەکان تەنها
+            const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
                                    .reduce((sum, sale) => sum + sale.total, 0);
-            const todayPurchases = purchases.filter(p => p.date === today)
+            const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
                                            .reduce((sum, purchase) => sum + purchase.total, 0);
             
-            // ئامارەکانی ئەم مانگە
+            // ئامارەکانی ئەم مانگە - فرۆشتنە نەقدیەکان تەنها
             const monthSales = sales.filter(s => {
                 const saleDate = new Date(s.date);
-                return saleDate.getMonth() + 1 === currentMonth && saleDate.getFullYear() === currentYear;
+                return saleDate.getMonth() + 1 === currentMonth && 
+                       saleDate.getFullYear() === currentYear &&
+                       s.paymentMethod === 'cash';
             }).reduce((sum, sale) => sum + sale.total, 0);
             
             const monthPurchases = purchases.filter(p => {
                 const purchaseDate = new Date(p.date);
-                return purchaseDate.getMonth() + 1 === currentMonth && purchaseDate.getFullYear() === currentYear;
+                return purchaseDate.getMonth() + 1 === currentMonth && 
+                       purchaseDate.getFullYear() === currentYear &&
+                       p.paymentType === 'cash';
             }).reduce((sum, purchase) => sum + purchase.total, 0);
             
-            // کۆی گشتی
-            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-            const totalPurchases = purchases.reduce((sum, purchase) => sum + purchase.total, 0);
+            // کۆی گشتی - فرۆشتنە نەقدیەکان تەنها
+            const totalSales = sales.filter(s => s.paymentMethod === 'cash')
+                                  .reduce((sum, sale) => sum + sale.total, 0);
+            const totalPurchases = purchases.filter(p => p.paymentType === 'cash')
+                                          .reduce((sum, purchase) => sum + purchase.total, 0);
             
             // قەرزی کڕیارەکان
             const customerDebts = sales
@@ -1344,19 +1350,19 @@
                     return;
                 }
                 
-                // گەڕان بەدوای پاکەتەکان
-                const filteredProducts = products.filter(p => 
-                    p.name.toLowerCase().includes(query)
-                );
-                
-                // گەڕان بەدوای شەریکەکان
+                // یەکەم: گەڕان بەدوای شەریکەکان
                 const filteredPartners = partners.filter(partner => 
                     partner.name.toLowerCase().includes(query)
                 );
                 
+                // دووەم: گەڕان بەدوای پاکەتەکان
+                const filteredProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query)
+                );
+                
                 let hasSuggestions = false;
                 
-                // پیشاندانی شەریکەکان لە پێشنیارەکان
+                // پیشاندانی شەریکەکان لە پێشنیارەکان (لە پێشەوە)
                 if (filteredPartners.length > 0) {
                     hasSuggestions = true;
                     const partnerHeader = document.createElement('div');
@@ -1426,6 +1432,10 @@
                     <p>بڕی قەرز: ${partner.debt} دینار</p>
                     <p>تێبینی: کڕین لەم شەریکە ئەتوانێ قەرزی زیاد بکات</p>
                 </div>
+                <div class="form-group">
+                    <label>ناوی پاکەت:</label>
+                    <input type="text" class="form-control" id="partner-product-name" placeholder="ناوی پاکەتی کڕدراو...">
+                </div>
             `;
             
             // ڕێستکردنی خانەکان
@@ -1458,35 +1468,46 @@
             const unitPrice = parseFloat(document.getElementById('purchase-unit-price').value);
             const salePrice = parseFloat(document.getElementById('purchase-sale-price').value);
             
-            if (!searchValue || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
-                alert('تکایە هەموو خانەکان پڕ بکەرەوە');
-                return;
-            }
-            
-            // پشکنین بۆ ئەوەی ئایا کڕین لە شەریکە یان پاکەتێکی نوێ
+            // پشکنین بۆ ئەوەی ئایا کڕین لە شەریکە
             const isPartner = partners.some(p => p.name === searchValue);
-            const isProduct = products.some(p => p.name === searchValue);
-            
             let partnerName = '';
             let productName = '';
             
             if (isPartner) {
+                // کڕین لە شەریک
                 partnerName = searchValue;
-                productName = prompt('ناوی پاکەتی کڕدراو بنووسە:');
+                productName = document.getElementById('partner-product-name') ? 
+                             document.getElementById('partner-product-name').value : 
+                             prompt('ناوی پاکەتی کڕدراو بنووسە:');
+                
                 if (!productName) {
                     alert('تکایە ناوی پاکەت بنووسە');
                     return;
                 }
-            } else if (isProduct) {
-                productName = searchValue;
-                // پرسیار لە بەکارهێنەر کە ئایا کڕین لە شەریکە؟
-                const usePartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
-                if (usePartner) {
-                    partnerName = prompt('ناوی شەریک بنووسە:');
+                
+                if (!quantity || isNaN(quantity) || quantity <= 0) {
+                    alert('تکایە بڕی کڕدراو پڕ بکەرەوە');
+                    return;
+                }
+                
+                if (!unitPrice || isNaN(unitPrice) || unitPrice <= 0) {
+                    alert('تکایە نرخی کڕین پڕ بکەرەوە');
+                    return;
+                }
+                
+                if (!salePrice || isNaN(salePrice) || salePrice <= 0) {
+                    alert('تکایە نرخی فرۆشتن پڕ بکەرەوە');
+                    return;
                 }
             } else {
-                // پاکەتێکی نوێ
+                // کڕینی ئاسایی
+                if (!searchValue || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
+                    alert('تکایە هەموو خانەکان پڕ بکەرەوە');
+                    return;
+                }
                 productName = searchValue;
+                
+                // پرسیار لە بەکارهێنەر کە ئایا کڕین لە شەریکە؟
                 const usePartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
                 if (usePartner) {
                     partnerName = prompt('ناوی شەریک بنووسە:');
@@ -1575,6 +1596,10 @@
             document.getElementById('purchase-sale-price').value = '';
             document.getElementById('purchase-product-details').innerHTML = '';
             document.getElementById('purchase-form').classList.add('hidden');
+            
+            if (document.getElementById('partner-product-name')) {
+                document.getElementById('partner-product-name').value = '';
+            }
             
             alert('کڕین بە سەرکەوتوویی تەواو بوو!');
             updateDashboard();
@@ -2807,13 +2832,27 @@
             
             payments.push(payment);
             
-            // کەمکردنەوەی قەرز لە فرۆشتنەکان
+            // کەمکردنەوەی قەرز لە فرۆشتنەکان و زیادکردنی فرۆشتنە نەقدیەکان
             let remainingAmount = amount;
-            sales.forEach(sale => {
+            const updatedSales = [...sales];
+            
+            updatedSales.forEach(sale => {
                 if (sale.customer === customerName && sale.paymentMethod === 'credit' && remainingAmount > 0) {
                     if (sale.total <= remainingAmount) {
-                        sale.paymentMethod = 'cash'; // گۆڕین بۆ نەقدی
+                        // گۆڕینی فرۆشتنە قەرزەکان بۆ نەقدی
+                        sale.paymentMethod = 'cash';
                         remainingAmount -= sale.total;
+                        
+                        // زیادکردنی فرۆشتنێکی نوێ بۆ نەقدی لە داشبۆرد
+                        const today = new Date().toISOString().split('T')[0];
+                        const newCashSale = {
+                            ...sale,
+                            id: Date.now(), // IDی نوێ بۆ ناساندنی جیاواز
+                            paymentMethod: 'cash',
+                            debtStatus: 'پارەکراو',
+                            originalSaleId: sale.id // ناساندنی فرۆشتنە ئەسڵیەکە
+                        };
+                        sales.push(newCashSale);
                     }
                 }
             });
@@ -2830,7 +2869,7 @@
             
             alert('واسڵ بە سەرکەوتوویی زیاد کرا');
             updatePaymentHistory();
-            updateDashboard();
+            updateDashboard(); // نوێکردنەوەی داشبۆرد
         }
 
         // نوێکردنەوەی مێژووی واسڵ
@@ -2994,9 +3033,9 @@
             
             if (period === 'today') {
                 const today = new Date().toISOString().split('T')[0];
-                const todaySales = sales.filter(s => s.date === today)
+                const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
                                        .reduce((sum, sale) => sum + sale.total, 0);
-                const todayPurchases = purchases.filter(p => p.date === today)
+                const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
                                                .reduce((sum, purchase) => sum + purchase.total, 0);
                 
                 reportData.push({
@@ -3015,9 +3054,9 @@
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dateStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                     
-                    const daySales = sales.filter(s => s.date === dateStr)
+                    const daySales = sales.filter(s => s.date === dateStr && s.paymentMethod === 'cash')
                                          .reduce((sum, sale) => sum + sale.total, 0);
-                    const dayPurchases = purchases.filter(p => p.date === dateStr)
+                    const dayPurchases = purchases.filter(p => p.date === dateStr && p.paymentType === 'cash')
                                                  .reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (daySales > 0 || dayPurchases > 0) {
@@ -3036,12 +3075,16 @@
                 for (let month = 1; month <= 12; month++) {
                     const monthSales = sales.filter(s => {
                         const saleDate = new Date(s.date);
-                        return saleDate.getFullYear() === currentYear && saleDate.getMonth() + 1 === month;
+                        return saleDate.getFullYear() === currentYear && 
+                               saleDate.getMonth() + 1 === month &&
+                               s.paymentMethod === 'cash';
                     }).reduce((sum, sale) => sum + sale.total, 0);
                     
                     const monthPurchases = purchases.filter(p => {
                         const purchaseDate = new Date(p.date);
-                        return purchaseDate.getFullYear() === currentYear && purchaseDate.getMonth() + 1 === month;
+                        return purchaseDate.getFullYear() === currentYear && 
+                               purchaseDate.getMonth() + 1 === month &&
+                               p.paymentType === 'cash';
                     }).reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (monthSales > 0 || monthPurchases > 0) {
