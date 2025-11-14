@@ -439,7 +439,7 @@
         
         <!-- کڕینی پاکەت -->
         <section id="purchase" class="section">
-            <h2>کڕینی پакەت</h2>
+            <h2>کڕینی پاکەت</h2>
             
             <div class="card">
                 <h3>کڕینی پاکەت</h3>
@@ -781,31 +781,27 @@
             const currentYear = new Date().getFullYear();
             
             // ئامارەکانی ئەمڕۆ - فرۆشتنە نەقدیەکان تەنها
-            const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
+            const todaySales = sales.filter(s => s.date === today)
                                    .reduce((sum, sale) => sum + sale.total, 0);
-            const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
+            const todayPurchases = purchases.filter(p => p.date === today)
                                            .reduce((sum, purchase) => sum + purchase.total, 0);
             
             // ئامارەکانی ئەم مانگە - فرۆشتنە نەقدیەکان تەنها
             const monthSales = sales.filter(s => {
                 const saleDate = new Date(s.date);
                 return saleDate.getMonth() + 1 === currentMonth && 
-                       saleDate.getFullYear() === currentYear &&
-                       s.paymentMethod === 'cash';
+                       saleDate.getFullYear() === currentYear;
             }).reduce((sum, sale) => sum + sale.total, 0);
             
             const monthPurchases = purchases.filter(p => {
                 const purchaseDate = new Date(p.date);
                 return purchaseDate.getMonth() + 1 === currentMonth && 
-                       purchaseDate.getFullYear() === currentYear &&
-                       p.paymentType === 'cash';
+                       purchaseDate.getFullYear() === currentYear;
             }).reduce((sum, purchase) => sum + purchase.total, 0);
             
             // کۆی گشتی - فرۆشتنە نەقدیەکان تەنها
-            const totalSales = sales.filter(s => s.paymentMethod === 'cash')
-                                  .reduce((sum, sale) => sum + sale.total, 0);
-            const totalPurchases = purchases.filter(p => p.paymentType === 'cash')
-                                          .reduce((sum, purchase) => sum + purchase.total, 0);
+            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
+            const totalPurchases = purchases.reduce((sum, purchase) => sum + purchase.total, 0);
             
             // قەرزی کڕیارەکان
             const customerDebts = sales
@@ -843,6 +839,7 @@
         function updatePurchaseSection() {
             updatePurchaseProductList();
             updatePurchaseHistory();
+            setupPurchaseSuggestions();
         }
         
         function updateInventorySection() {
@@ -1153,7 +1150,6 @@
                 items: [...cart],
                 total: total,
                 paymentMethod: paymentMethod,
-                // زیادکردنی بارەگای قەرز
                 debtStatus: paymentMethod === 'credit' ? 'قەرز' : 'پارەکراو'
             };
             
@@ -1318,7 +1314,6 @@
         
         function editSale(saleId) {
             alert('دەستکاری فرۆشتن: ' + saleId);
-            // لێرە دەتوانیت فۆرمێک بکەیتەوە بۆ دەستکاری فرۆشتن
         }
         
         function deleteSale(saleId) {
@@ -1334,7 +1329,6 @@
         document.getElementById('purchase-product-btn').addEventListener('click', function() {
             const purchaseForm = document.getElementById('purchase-form');
             purchaseForm.classList.toggle('hidden');
-            setupPurchaseSuggestions();
         });
 
         function setupPurchaseSuggestions() {
@@ -1422,7 +1416,6 @@
             });
         }
 
-        // فەنکشنی نوێ بۆ هەڵبژاردنی شەریک
         function selectPartnerForPurchase(partner) {
             const detailsContainer = document.getElementById('purchase-product-details');
             detailsContainer.innerHTML = `
@@ -1605,7 +1598,7 @@
             updateDashboard();
             updatePurchaseProductList();
             updatePurchaseHistory();
-        });
+        }
         
         function updatePurchaseProductList() {
             const searchInput = document.getElementById('purchase-product-search');
@@ -1735,7 +1728,6 @@
             });
         }
 
-        // فەنکشنی دەستکاری کڕین
         function editPurchase(purchaseId) {
             const purchase = purchases.find(p => p.id == purchaseId);
             if (!purchase) return;
@@ -1792,7 +1784,6 @@
             }
         }
 
-        // فەنکشنی سڕینەوەی کڕین
         function deletePurchase(purchaseId) {
             if (confirm('دڵنیای لە سڕینەوەی ئەم کڕینە؟')) {
                 const purchase = purchases.find(p => p.id == purchaseId);
@@ -2572,20 +2563,28 @@
             
             // کەمکردنەوە لە کۆی فرۆشتن ئەگەر داواکرابوو
             if (reduceSales) {
-                // لێرە دەتوانیت کۆی فرۆشتن بکەیتەوە
-                // بۆ نموونە، دەتوانیت ئامارەکان نوێ بکەیتەوە
-                updateDashboard();
+                // زیادکردنی سەرف و کەمکردنەوە لە کۆی فرۆشتن
+                const today = new Date().toISOString().split('T')[0];
+                const expenseSale = {
+                    id: Date.now(),
+                    date: today,
+                    customer: partner.name + ' (سەرف)',
+                    items: [{
+                        productId: 0,
+                        name: 'سەرف: ' + (reason || 'بێ هۆکار'),
+                        price: -amount, // نرخی نێگەتیڤ بۆ کەمکردنەوە
+                        quantity: 1,
+                        saleType: 'unit'
+                    }],
+                    total: -amount,
+                    paymentMethod: 'cash',
+                    debtStatus: 'پارەکراو',
+                    isExpense: true // نیشانەی ئەوەی کە ئەم فرۆشتنە سەرفە
+                };
+                
+                sales.push(expenseSale);
+                localStorage.setItem('sales', JSON.stringify(sales));
             }
-            
-            // تۆمارکردنی حرکات لە شەریک
-            if (!partner.transactions) partner.transactions = [];
-            partner.transactions.push({
-                date: expense.date,
-                type: 'expense',
-                amount: amount,
-                reason: reason,
-                description: `سەرف: ${reason || 'بێ هۆکار'}`
-            });
             
             // پاشەکەوتکردن
             localStorage.setItem('expenses', JSON.stringify(expenses));
@@ -2601,6 +2600,7 @@
             updateExpenseHistory();
             updatePartnerList();
             updatePartnerDebtHistory();
+            updateDashboard();
         }
 
         // نوێکردنەوەی مێژووی سەرف
@@ -2842,17 +2842,6 @@
                         // گۆڕینی فرۆشتنە قەرزەکان بۆ نەقدی
                         sale.paymentMethod = 'cash';
                         remainingAmount -= sale.total;
-                        
-                        // زیادکردنی فرۆشتنێکی نوێ بۆ نەقدی لە داشبۆرد
-                        const today = new Date().toISOString().split('T')[0];
-                        const newCashSale = {
-                            ...sale,
-                            id: Date.now(), // IDی نوێ بۆ ناساندنی جیاواز
-                            paymentMethod: 'cash',
-                            debtStatus: 'پارەکراو',
-                            originalSaleId: sale.id // ناساندنی فرۆشتنە ئەسڵیەکە
-                        };
-                        sales.push(newCashSale);
                     }
                 }
             });
@@ -2869,7 +2858,7 @@
             
             alert('واسڵ بە سەرکەوتوویی زیاد کرا');
             updatePaymentHistory();
-            updateDashboard(); // نوێکردنەوەی داشبۆرد
+            updateDashboard();
         }
 
         // نوێکردنەوەی مێژووی واسڵ
@@ -3033,9 +3022,9 @@
             
             if (period === 'today') {
                 const today = new Date().toISOString().split('T')[0];
-                const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
+                const todaySales = sales.filter(s => s.date === today)
                                        .reduce((sum, sale) => sum + sale.total, 0);
-                const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
+                const todayPurchases = purchases.filter(p => p.date === today)
                                                .reduce((sum, purchase) => sum + purchase.total, 0);
                 
                 reportData.push({
@@ -3054,9 +3043,9 @@
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dateStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                     
-                    const daySales = sales.filter(s => s.date === dateStr && s.paymentMethod === 'cash')
+                    const daySales = sales.filter(s => s.date === dateStr)
                                          .reduce((sum, sale) => sum + sale.total, 0);
-                    const dayPurchases = purchases.filter(p => p.date === dateStr && p.paymentType === 'cash')
+                    const dayPurchases = purchases.filter(p => p.date === dateStr)
                                                  .reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (daySales > 0 || dayPurchases > 0) {
@@ -3076,15 +3065,13 @@
                     const monthSales = sales.filter(s => {
                         const saleDate = new Date(s.date);
                         return saleDate.getFullYear() === currentYear && 
-                               saleDate.getMonth() + 1 === month &&
-                               s.paymentMethod === 'cash';
+                               saleDate.getMonth() + 1 === month;
                     }).reduce((sum, sale) => sum + sale.total, 0);
                     
                     const monthPurchases = purchases.filter(p => {
                         const purchaseDate = new Date(p.date);
                         return purchaseDate.getFullYear() === currentYear && 
-                               purchaseDate.getMonth() + 1 === month &&
-                               p.paymentType === 'cash';
+                               purchaseDate.getMonth() + 1 === month;
                     }).reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (monthSales > 0 || monthPurchases > 0) {
