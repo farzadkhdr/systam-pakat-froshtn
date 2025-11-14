@@ -446,10 +446,18 @@
                 <button class="btn btn-primary" id="purchase-product-btn">کڕینەوە</button>
                 
                 <div id="purchase-form" class="hidden">
+                    <!-- گەڕان بەدوای پاکەت -->
                     <div class="form-group">
                         <label>گەڕان بەدوای پاکەت:</label>
-                        <input type="text" class="search-box" id="purchase-search" placeholder="ناوی پاکەت...">
-                        <div id="purchase-suggestions" class="suggestions"></div>
+                        <input type="text" class="search-box" id="purchase-product-search" placeholder="ناوی پاکەت...">
+                        <div id="purchase-product-suggestions" class="suggestions"></div>
+                    </div>
+                    
+                    <!-- گەڕان بەدوای شەریک -->
+                    <div class="form-group">
+                        <label>گەڕان بەدوای شەریک (ئارەزوومەندانە):</label>
+                        <input type="text" class="search-box" id="purchase-partner-search" placeholder="ناوی شەریک...">
+                        <div id="purchase-partner-suggestions" class="suggestions"></div>
                     </div>
                     
                     <div id="purchase-product-details">
@@ -477,7 +485,7 @@
             
             <div class="card">
                 <h3>لیستی پاکەتەکان</h3>
-                <input type="text" class="search-box" id="purchase-product-search" placeholder="گەڕان بەدوای پاکەت...">
+                <input type="text" class="search-box" id="purchase-list-search" placeholder="گەڕان بەدوای پاکەت...">
                 
                 <div id="purchase-product-list">
                     <!-- لیستی پاکەتەکان لێرە دەخرێنەوە -->
@@ -781,27 +789,31 @@
             const currentYear = new Date().getFullYear();
             
             // ئامارەکانی ئەمڕۆ - فرۆشتنە نەقدیەکان تەنها
-            const todaySales = sales.filter(s => s.date === today)
+            const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
                                    .reduce((sum, sale) => sum + sale.total, 0);
-            const todayPurchases = purchases.filter(p => p.date === today)
+            const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
                                            .reduce((sum, purchase) => sum + purchase.total, 0);
             
             // ئامارەکانی ئەم مانگە - فرۆشتنە نەقدیەکان تەنها
             const monthSales = sales.filter(s => {
                 const saleDate = new Date(s.date);
                 return saleDate.getMonth() + 1 === currentMonth && 
-                       saleDate.getFullYear() === currentYear;
+                       saleDate.getFullYear() === currentYear &&
+                       s.paymentMethod === 'cash';
             }).reduce((sum, sale) => sum + sale.total, 0);
             
             const monthPurchases = purchases.filter(p => {
                 const purchaseDate = new Date(p.date);
                 return purchaseDate.getMonth() + 1 === currentMonth && 
-                       purchaseDate.getFullYear() === currentYear;
+                       purchaseDate.getFullYear() === currentYear &&
+                       p.paymentType === 'cash';
             }).reduce((sum, purchase) => sum + purchase.total, 0);
             
             // کۆی گشتی - فرۆشتنە نەقدیەکان تەنها
-            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-            const totalPurchases = purchases.reduce((sum, purchase) => sum + purchase.total, 0);
+            const totalSales = sales.filter(s => s.paymentMethod === 'cash')
+                                  .reduce((sum, sale) => sum + sale.total, 0);
+            const totalPurchases = purchases.filter(p => p.paymentType === 'cash')
+                                          .reduce((sum, purchase) => sum + purchase.total, 0);
             
             // قەرزی کڕیارەکان
             const customerDebts = sales
@@ -839,7 +851,6 @@
         function updatePurchaseSection() {
             updatePurchaseProductList();
             updatePurchaseHistory();
-            setupPurchaseSuggestions();
         }
         
         function updateInventorySection() {
@@ -1150,6 +1161,7 @@
                 items: [...cart],
                 total: total,
                 paymentMethod: paymentMethod,
+                // زیادکردنی بارەگای قەرز
                 debtStatus: paymentMethod === 'credit' ? 'قەرز' : 'پارەکراو'
             };
             
@@ -1314,6 +1326,7 @@
         
         function editSale(saleId) {
             alert('دەستکاری فرۆشتن: ' + saleId);
+            // لێرە دەتوانیت فۆرمێک بکەیتەوە بۆ دەستکاری فرۆشتن
         }
         
         function deleteSale(saleId) {
@@ -1329,11 +1342,13 @@
         document.getElementById('purchase-product-btn').addEventListener('click', function() {
             const purchaseForm = document.getElementById('purchase-form');
             purchaseForm.classList.toggle('hidden');
+            setupPurchaseProductSuggestions();
+            setupPurchasePartnerSuggestions();
         });
 
-        function setupPurchaseSuggestions() {
-            const searchInput = document.getElementById('purchase-search');
-            const suggestionsContainer = document.getElementById('purchase-suggestions');
+        function setupPurchaseProductSuggestions() {
+            const searchInput = document.getElementById('purchase-product-search');
+            const suggestionsContainer = document.getElementById('purchase-product-suggestions');
             
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase();
@@ -1344,56 +1359,16 @@
                     return;
                 }
                 
-                // یەکەم: گەڕان بەدوای شەریکەکان
-                const filteredPartners = partners.filter(partner => 
-                    partner.name.toLowerCase().includes(query)
-                );
-                
-                // دووەم: گەڕان بەدوای پاکەتەکان
                 const filteredProducts = products.filter(p => 
                     p.name.toLowerCase().includes(query)
                 );
                 
-                let hasSuggestions = false;
-                
-                // پیشاندانی شەریکەکان لە پێشنیارەکان (لە پێشەوە)
-                if (filteredPartners.length > 0) {
-                    hasSuggestions = true;
-                    const partnerHeader = document.createElement('div');
-                    partnerHeader.className = 'suggestion-header';
-                    partnerHeader.textContent = 'شەریکەکان';
-                    partnerHeader.style.fontWeight = 'bold';
-                    partnerHeader.style.padding = '8px 10px';
-                    partnerHeader.style.backgroundColor = '#f8f9fa';
-                    partnerHeader.style.borderBottom = '1px solid #ddd';
-                    suggestionsContainer.appendChild(partnerHeader);
-                    
-                    filteredPartners.forEach(partner => {
-                        const item = document.createElement('div');
-                        item.className = 'suggestion-item';
-                        item.innerHTML = `
-                            <div>${partner.name}</div>
-                            <small style="color: #666;">شەریک - قەرز: ${partner.debt} دینار</small>
-                        `;
-                        item.addEventListener('click', () => {
-                            searchInput.value = partner.name;
-                            suggestionsContainer.style.display = 'none';
-                            selectPartnerForPurchase(partner);
-                        });
-                        suggestionsContainer.appendChild(item);
-                    });
-                }
-                
-                // پیشاندانی پاکەتەکان لە پێشنیارەکان
                 if (filteredProducts.length > 0) {
-                    hasSuggestions = true;
+                    suggestionsContainer.style.display = 'block';
+                    
                     const productHeader = document.createElement('div');
                     productHeader.className = 'suggestion-header';
                     productHeader.textContent = 'پاکەتەکان';
-                    productHeader.style.fontWeight = 'bold';
-                    productHeader.style.padding = '8px 10px';
-                    productHeader.style.backgroundColor = '#f8f9fa';
-                    productHeader.style.borderBottom = '1px solid #ddd';
                     suggestionsContainer.appendChild(productHeader);
                     
                     filteredProducts.forEach(product => {
@@ -1410,12 +1385,58 @@
                         });
                         suggestionsContainer.appendChild(item);
                     });
+                } else {
+                    suggestionsContainer.style.display = 'none';
                 }
-                
-                suggestionsContainer.style.display = hasSuggestions ? 'block' : 'none';
             });
         }
 
+        function setupPurchasePartnerSuggestions() {
+            const searchInput = document.getElementById('purchase-partner-search');
+            const suggestionsContainer = document.getElementById('purchase-partner-suggestions');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                suggestionsContainer.innerHTML = '';
+                
+                if (query.length < 1) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+                
+                const filteredPartners = partners.filter(partner => 
+                    partner.name.toLowerCase().includes(query)
+                );
+                
+                if (filteredPartners.length > 0) {
+                    suggestionsContainer.style.display = 'block';
+                    
+                    const partnerHeader = document.createElement('div');
+                    partnerHeader.className = 'suggestion-header';
+                    partnerHeader.textContent = 'شەریکەکان';
+                    suggestionsContainer.appendChild(partnerHeader);
+                    
+                    filteredPartners.forEach(partner => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.innerHTML = `
+                            <div>${partner.name}</div>
+                            <small style="color: #666;">شەریک - قەرز: ${partner.debt} دینار</small>
+                        `;
+                        item.addEventListener('click', () => {
+                            searchInput.value = partner.name;
+                            suggestionsContainer.style.display = 'none';
+                            selectPartnerForPurchase(partner);
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+
+        // فەنکشنی نوێ بۆ هەڵبژاردنی شەریک
         function selectPartnerForPurchase(partner) {
             const detailsContainer = document.getElementById('purchase-product-details');
             detailsContainer.innerHTML = `
@@ -1452,59 +1473,22 @@
             document.getElementById('purchase-unit-price').value = product.purchasePrice;
             document.getElementById('purchase-sale-price').value = product.salePrice;
             document.getElementById('purchase-quantity').value = 1;
+            
+            // پاککردنەوەی زانیاری شەریک
+            document.getElementById('purchase-partner-search').value = '';
         }
 
         // پشتڕاستکردنەوەی کڕین
         document.getElementById('confirm-purchase').addEventListener('click', function() {
-            const searchValue = document.getElementById('purchase-search').value;
+            const productName = document.getElementById('purchase-product-search').value;
+            const partnerName = document.getElementById('purchase-partner-search').value;
             const quantity = parseInt(document.getElementById('purchase-quantity').value);
             const unitPrice = parseFloat(document.getElementById('purchase-unit-price').value);
             const salePrice = parseFloat(document.getElementById('purchase-sale-price').value);
             
-            // پشکنین بۆ ئەوەی ئایا کڕین لە شەریکە
-            const isPartner = partners.some(p => p.name === searchValue);
-            let partnerName = '';
-            let productName = '';
-            
-            if (isPartner) {
-                // کڕین لە شەریک
-                partnerName = searchValue;
-                productName = document.getElementById('partner-product-name') ? 
-                             document.getElementById('partner-product-name').value : 
-                             prompt('ناوی پاکەتی کڕدراو بنووسە:');
-                
-                if (!productName) {
-                    alert('تکایە ناوی پاکەت بنووسە');
-                    return;
-                }
-                
-                if (!quantity || isNaN(quantity) || quantity <= 0) {
-                    alert('تکایە بڕی کڕدراو پڕ بکەرەوە');
-                    return;
-                }
-                
-                if (!unitPrice || isNaN(unitPrice) || unitPrice <= 0) {
-                    alert('تکایە نرخی کڕین پڕ بکەرەوە');
-                    return;
-                }
-                
-                if (!salePrice || isNaN(salePrice) || salePrice <= 0) {
-                    alert('تکایە نرخی فرۆشتن پڕ بکەرەوە');
-                    return;
-                }
-            } else {
-                // کڕینی ئاسایی
-                if (!searchValue || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
-                    alert('تکایە هەموو خانەکان پڕ بکەرەوە');
-                    return;
-                }
-                productName = searchValue;
-                
-                // پرسیار لە بەکارهێنەر کە ئایا کڕین لە شەریکە؟
-                const usePartner = confirm('ئایا ئەم کڕینە لە شەریکە؟');
-                if (usePartner) {
-                    partnerName = prompt('ناوی شەریک بنووسە:');
-                }
+            if (!productName || isNaN(quantity) || isNaN(unitPrice) || isNaN(salePrice)) {
+                alert('تکایە ناوی پاکەت و بڕ و نرخەکان پڕ بکەرەوە');
+                return;
             }
             
             // پرسیار لە جۆری پارەدان
@@ -1583,25 +1567,22 @@
             localStorage.setItem('purchases', JSON.stringify(purchases));
             
             // ڕێستکردنی فۆرم
-            document.getElementById('purchase-search').value = '';
+            document.getElementById('purchase-product-search').value = '';
+            document.getElementById('purchase-partner-search').value = '';
             document.getElementById('purchase-quantity').value = '1';
             document.getElementById('purchase-unit-price').value = '';
             document.getElementById('purchase-sale-price').value = '';
             document.getElementById('purchase-product-details').innerHTML = '';
             document.getElementById('purchase-form').classList.add('hidden');
             
-            if (document.getElementById('partner-product-name')) {
-                document.getElementById('partner-product-name').value = '';
-            }
-            
             alert('کڕین بە سەرکەوتوویی تەواو بوو!');
             updateDashboard();
             updatePurchaseProductList();
             updatePurchaseHistory();
-        }
+        });
         
         function updatePurchaseProductList() {
-            const searchInput = document.getElementById('purchase-product-search');
+            const searchInput = document.getElementById('purchase-list-search');
             const productListContainer = document.getElementById('purchase-product-list');
             
             searchInput.addEventListener('input', function() {
@@ -1728,6 +1709,7 @@
             });
         }
 
+        // فەنکشنی دەستکاری کڕین
         function editPurchase(purchaseId) {
             const purchase = purchases.find(p => p.id == purchaseId);
             if (!purchase) return;
@@ -1784,6 +1766,7 @@
             }
         }
 
+        // فەنکشنی سڕینەوەی کڕین
         function deletePurchase(purchaseId) {
             if (confirm('دڵنیای لە سڕینەوەی ئەم کڕینە؟')) {
                 const purchase = purchases.find(p => p.id == purchaseId);
@@ -2563,28 +2546,20 @@
             
             // کەمکردنەوە لە کۆی فرۆشتن ئەگەر داواکرابوو
             if (reduceSales) {
-                // زیادکردنی سەرف و کەمکردنەوە لە کۆی فرۆشتن
-                const today = new Date().toISOString().split('T')[0];
-                const expenseSale = {
-                    id: Date.now(),
-                    date: today,
-                    customer: partner.name + ' (سەرف)',
-                    items: [{
-                        productId: 0,
-                        name: 'سەرف: ' + (reason || 'بێ هۆکار'),
-                        price: -amount, // نرخی نێگەتیڤ بۆ کەمکردنەوە
-                        quantity: 1,
-                        saleType: 'unit'
-                    }],
-                    total: -amount,
-                    paymentMethod: 'cash',
-                    debtStatus: 'پارەکراو',
-                    isExpense: true // نیشانەی ئەوەی کە ئەم فرۆشتنە سەرفە
-                };
-                
-                sales.push(expenseSale);
-                localStorage.setItem('sales', JSON.stringify(sales));
+                // لێرە دەتوانیت کۆی فرۆشتن بکەیتەوە
+                // بۆ نموونە، دەتوانیت ئامارەکان نوێ بکەیتەوە
+                updateDashboard();
             }
+            
+            // تۆمارکردنی حرکات لە شەریک
+            if (!partner.transactions) partner.transactions = [];
+            partner.transactions.push({
+                date: expense.date,
+                type: 'expense',
+                amount: amount,
+                reason: reason,
+                description: `سەرف: ${reason || 'بێ هۆکار'}`
+            });
             
             // پاشەکەوتکردن
             localStorage.setItem('expenses', JSON.stringify(expenses));
@@ -2600,7 +2575,6 @@
             updateExpenseHistory();
             updatePartnerList();
             updatePartnerDebtHistory();
-            updateDashboard();
         }
 
         // نوێکردنەوەی مێژووی سەرف
@@ -2842,6 +2816,17 @@
                         // گۆڕینی فرۆشتنە قەرزەکان بۆ نەقدی
                         sale.paymentMethod = 'cash';
                         remainingAmount -= sale.total;
+                        
+                        // زیادکردنی فرۆشتنێکی نوێ بۆ نەقدی لە داشبۆرد
+                        const today = new Date().toISOString().split('T')[0];
+                        const newCashSale = {
+                            ...sale,
+                            id: Date.now(), // IDی نوێ بۆ ناساندنی جیاواز
+                            paymentMethod: 'cash',
+                            debtStatus: 'پارەکراو',
+                            originalSaleId: sale.id // ناساندنی فرۆشتنە ئەسڵیەکە
+                        };
+                        sales.push(newCashSale);
                     }
                 }
             });
@@ -2858,7 +2843,7 @@
             
             alert('واسڵ بە سەرکەوتوویی زیاد کرا');
             updatePaymentHistory();
-            updateDashboard();
+            updateDashboard(); // نوێکردنەوەی داشبۆرد
         }
 
         // نوێکردنەوەی مێژووی واسڵ
@@ -3022,9 +3007,9 @@
             
             if (period === 'today') {
                 const today = new Date().toISOString().split('T')[0];
-                const todaySales = sales.filter(s => s.date === today)
+                const todaySales = sales.filter(s => s.date === today && s.paymentMethod === 'cash')
                                        .reduce((sum, sale) => sum + sale.total, 0);
-                const todayPurchases = purchases.filter(p => p.date === today)
+                const todayPurchases = purchases.filter(p => p.date === today && p.paymentType === 'cash')
                                                .reduce((sum, purchase) => sum + purchase.total, 0);
                 
                 reportData.push({
@@ -3043,9 +3028,9 @@
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dateStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                     
-                    const daySales = sales.filter(s => s.date === dateStr)
+                    const daySales = sales.filter(s => s.date === dateStr && s.paymentMethod === 'cash')
                                          .reduce((sum, sale) => sum + sale.total, 0);
-                    const dayPurchases = purchases.filter(p => p.date === dateStr)
+                    const dayPurchases = purchases.filter(p => p.date === dateStr && p.paymentType === 'cash')
                                                  .reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (daySales > 0 || dayPurchases > 0) {
@@ -3065,13 +3050,15 @@
                     const monthSales = sales.filter(s => {
                         const saleDate = new Date(s.date);
                         return saleDate.getFullYear() === currentYear && 
-                               saleDate.getMonth() + 1 === month;
+                               saleDate.getMonth() + 1 === month &&
+                               s.paymentMethod === 'cash';
                     }).reduce((sum, sale) => sum + sale.total, 0);
                     
                     const monthPurchases = purchases.filter(p => {
                         const purchaseDate = new Date(p.date);
                         return purchaseDate.getFullYear() === currentYear && 
-                               purchaseDate.getMonth() + 1 === month;
+                               purchaseDate.getMonth() + 1 === month &&
+                               p.paymentType === 'cash';
                     }).reduce((sum, purchase) => sum + purchase.total, 0);
                     
                     if (monthSales > 0 || monthPurchases > 0) {
